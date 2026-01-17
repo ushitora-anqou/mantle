@@ -86,7 +86,7 @@ func execAtLocal(ctx context.Context, cmd string, input []byte, args ...string) 
 }
 
 func getKubectlInvocation(clusterNo int) ([]string, error) {
-	kubectlPrefix := ""
+	var kubectlPrefix string
 	switch clusterNo {
 	case PrimaryK8sCluster:
 		kubectlPrefix = kubectlPrefixPrimary
