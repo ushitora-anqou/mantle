@@ -423,8 +423,7 @@ func isMantleBackupSnapshotCaptured(namespace, name string) (bool, error) {
 func isMantleRestoreReady(namespace, name string) bool {
 	stdout, stderr, err := kubectl("get", "mantlerestore", "-n", namespace, name, "-o", "json")
 	if err != nil {
-		fmt.Println(string(stderr))
-		panic(err)
+		panic(fmt.Sprintf("kubectl get mantlerestore failed. stderr: %s, err: %v", string(stderr), err))
 	}
 
 	var restore mantlev1.MantleRestore
