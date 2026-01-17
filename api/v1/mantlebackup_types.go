@@ -61,13 +61,14 @@ const (
 	BackupConditionSyncedToRemote   = "SyncedToRemote"
 	BackupConditionVerified         = "Verified"
 
-	// Reasons for ConditionSnapshotCaptured
+	// ConditionReasonSnapshotCapturedNoProblem indicates that the RBD snapshot was captured successfully.
 	ConditionReasonSnapshotCapturedNoProblem = "NoProblem"
-	// Reasons for ConditionSyncedToRemote
+	// ConditionReasonSyncedToRemoteNoProblem indicates that the backup data was synchronized to the remote object storage successfully.
 	ConditionReasonSyncedToRemoteNoProblem = "NoProblem"
-	// Reasons for ConditionVerified
+	// ConditionReasonVerifiedSuccess indicates that the verification job succeeded.
 	ConditionReasonVerifiedSuccess = "VerificationJobSuccess"
-	ConditionReasonVerifiedFailed  = "VerificationJobFailed"
+	// ConditionReasonVerifiedFailed indicates that the verification job failed.
+	ConditionReasonVerifiedFailed = "VerificationJobFailed"
 )
 
 //+kubebuilder:object:root=true

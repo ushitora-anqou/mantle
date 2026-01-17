@@ -109,7 +109,7 @@ func (c *cephCmdImpl) RBDTrashMv(pool, image string) error {
 	return nil
 }
 
-// CephRBDTaskTrashRemove adds a task to remove the image from trash.
+// CephRBDTaskAddTrashRemove adds a task to remove the image from trash.
 func (c *cephCmdImpl) CephRBDTaskAddTrashRemove(pool, imageID string) error {
 	_, stderr, err := c.command.execute("ceph", "rbd", "task", "add", "trash", "remove", fmt.Sprintf("%s/%s", pool, imageID))
 	if err != nil {

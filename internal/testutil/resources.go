@@ -51,7 +51,7 @@ func NewResourceManager(client client.Client) (*ResourceManager, error) {
 	}, nil
 }
 
-// EnvTest cannot delete namespace. So, we have to use another new namespace.
+// CreateNamespace creates a new namespace. EnvTest cannot delete namespace, so we have to use another new namespace.
 func (r *ResourceManager) CreateNamespace() string {
 	name := util.GetUniqueName("test-")
 	ns := corev1.Namespace{
@@ -256,6 +256,7 @@ func (r *ResourceManager) ChangeJobCondition(ctx context.Context, job *batchv1.J
 	return r.client.Status().Update(ctx, job)
 }
 
+// ObjectConstraint is a constraint that ensures T is a client.Object and the constraint is for a pointer to T.
 // cf. https://go.googlesource.com/proposal/+/refs/heads/master/design/43651-type-parameters.md#pointer-method-example
 type ObjectConstraint[T any] interface {
 	client.Object

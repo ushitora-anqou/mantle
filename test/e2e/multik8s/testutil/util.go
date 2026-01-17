@@ -102,7 +102,7 @@ func getKubectlInvocation(clusterNo int) ([]string, error) {
 	return strings.Fields(kubectlPrefix), nil
 }
 
-// input can be nil.
+// Kubectl executes kubectl command. input can be nil.
 func Kubectl(ctx context.Context, clusterNo int, input []byte, args ...string) ([]byte, []byte, error) {
 	fields, err := getKubectlInvocation(clusterNo)
 	if err != nil {
