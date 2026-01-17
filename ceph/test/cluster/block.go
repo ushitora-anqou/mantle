@@ -11,6 +11,7 @@ import (
 	"github.com/cybozu-go/mantle/test/util"
 )
 
+// ZeroOutBlock zeros out the block device in the specified deployment.
 func ZeroOutBlock(namespace, deployName string) error {
 	_, err := Kubectl("exec", "-n", namespace, "deploy/"+deployName, "--",
 		"blkdiscard", "-z", "/dev/rbd-device")
@@ -21,6 +22,7 @@ func ZeroOutBlock(namespace, deployName string) error {
 	return nil
 }
 
+// WriteRandomBlock writes random data to the block device at the specified offset.
 func WriteRandomBlock(namespace, deployName string, offset, size uint64) error {
 	_, err := Kubectl("exec", "-n", namespace, "deploy/"+deployName, "--",
 		"dd", "if=/dev/urandom", "of=/dev/rbd-device", "bs=1K",
@@ -32,6 +34,7 @@ func WriteRandomBlock(namespace, deployName string, offset, size uint64) error {
 	return nil
 }
 
+// GetBlockAsFile copies the block device content to a local file.
 func GetBlockAsFile(namespace, deployName, filename string) error {
 	const workFilename = "/tmp/work.bin"
 
@@ -53,6 +56,7 @@ func GetBlockAsFile(namespace, deployName, filename string) error {
 	return RemoveFileByPod(namespace, deployName, workFilename)
 }
 
+// CompareBlockWithFile compares the block device content with a local file.
 func CompareBlockWithFile(namespace, deployName, filename string) error {
 	workFilename := util.GetUniqueName("compare-file-")
 	defer func() {

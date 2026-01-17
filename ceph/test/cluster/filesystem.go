@@ -13,6 +13,7 @@ import (
 
 var workDir string
 
+// MakeRandomFile creates a file with random content of the specified size.
 func MakeRandomFile(filename string, size int) error {
 	args := []string{"if=/dev/urandom", "of=" + path.Join(workDir, filename), "bs=1K", fmt.Sprintf("count=%d", size/1024)}
 	log.Printf("📂 dd %s", strings.Join(args, " "))
@@ -24,6 +25,7 @@ func MakeRandomFile(filename string, size int) error {
 	return command.Run()
 }
 
+// PushFileToPod copies a local file to the specified pod.
 func PushFileToPod(filename, namespace, deployName, dst string) error {
 	podName, err := GetPodNameByDeploy(namespace, deployName)
 	if err != nil {
@@ -39,6 +41,7 @@ func PushFileToPod(filename, namespace, deployName, dst string) error {
 	return err
 }
 
+// RemoveFileByPod removes a file from the specified pod.
 func RemoveFileByPod(namespace, deployName, target string) error {
 	podName, err := GetPodNameByDeploy(namespace, deployName)
 	if err != nil {
@@ -83,6 +86,7 @@ func CompareFilesInPod(filename, namespace, deployName, target string) error {
 	return nil
 }
 
+// RemoveWorkDir removes the temporary work directory.
 func RemoveWorkDir() {
 	if err := os.RemoveAll(workDir); err != nil {
 		log.Fatalf("failed to remove workDir: %v", err)

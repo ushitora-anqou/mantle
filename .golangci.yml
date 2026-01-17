@@ -3,6 +3,14 @@ run:
   allow-parallel-runners: true
 linters:
   settings:
+    revive:
+      rules:
+        - name: dot-imports
+          arguments:
+            - allowedPackages:
+                - github.com/onsi/gomega
+                - github.com/onsi/ginkgo/v2
+                - github.com/cybozu-go/mantle/test/e2e/multik8s/testutil
     staticcheck:
       dot-import-whitelist: # allow dot imports for the following packages
         - github.com/onsi/gomega
@@ -37,7 +45,6 @@ linters:
     - noctx
     - noinlineerr
     - paralleltest
-    - revive
     - tagliatelle
     - testpackage
     - varnamelen

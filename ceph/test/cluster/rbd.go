@@ -12,10 +12,12 @@ import (
 	"k8s.io/utils/ptr"
 )
 
+// Rbd executes an rbd command inside the rook-ceph-tools deployment.
 func Rbd(args ...string) ([]byte, error) {
 	return Kubectl(append([]string{"exec", "-n", ROOK_NAMESPACE, "deploy/rook-ceph-tools", "--", "rbd"}, args...)...)
 }
 
+// ExportDiff exports the diff of an RBD image to a file.
 func ExportDiff(filename string, args ...string) error {
 	_, err := Kubectl("exec", "-n", ROOK_NAMESPACE, "deploy/rook-ceph-tools", "--", "rm", "-f", filename)
 	if err != nil {
@@ -31,6 +33,7 @@ func ExportDiff(filename string, args ...string) error {
 	return nil
 }
 
+// ImportDiff imports an RBD diff file to an image.
 func ImportDiff(filename, pool, image, rollbackTo, namespace, deployName, pvcName string) error {
 	return RunWithStopPod(namespace, deployName, func() error {
 		if rollbackTo == "" {

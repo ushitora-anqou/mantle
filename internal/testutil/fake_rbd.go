@@ -149,7 +149,7 @@ func (f *FakeRBD) RBDSnapCreate(pool, image, snap string) error {
 	}
 
 	f.snapshots[key] = append(snaps, ceph.RBDSnapshot{
-		Id:        f.nextSnapId,
+		ID:        f.nextSnapId,
 		Name:      snap,
 		Size:      FakeRBDSnapshotSize,
 		Protected: false,

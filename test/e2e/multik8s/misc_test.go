@@ -131,13 +131,13 @@ var _ = Describe("miscellaneous tests", func() {
 		snap, err := FindRBDSnapshotInPVC(SecondaryK8sCluster, namespace, pvcName1, backupName1)
 		Expect(err).NotTo(HaveOccurred())
 		Expect(secondaryMB1.Status.SnapID).NotTo(BeNil())
-		Expect(*secondaryMB1.Status.SnapID).To(Equal(snap.Id))
+		Expect(*secondaryMB1.Status.SnapID).To(Equal(snap.ID))
 		Expect(snap.Name).To(Equal(secondaryMB1.Name))
 
 		snap, err = FindRBDSnapshotInPVC(SecondaryK8sCluster, namespace, pvcName2, backupName2)
 		Expect(err).NotTo(HaveOccurred())
 		Expect(secondaryMB2.Status.SnapID).NotTo(BeNil())
-		Expect(*secondaryMB2.Status.SnapID).To(Equal(snap.Id))
+		Expect(*secondaryMB2.Status.SnapID).To(Equal(snap.ID))
 		Expect(snap.Name).To(Equal(secondaryMB2.Name))
 
 		EnsureCorrectRestoration(PrimaryK8sCluster, ctx, namespace, backupName1, restoreName1, writtenDataHash1)

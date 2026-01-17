@@ -1,7 +1,9 @@
+// Package objectstorage provides interfaces for object storage operations.
 package objectstorage
 
 import "context"
 
+// Bucket is the interface for bucket operations.
 type Bucket interface {
 	Exists(ctx context.Context, path string) (bool, error)
 

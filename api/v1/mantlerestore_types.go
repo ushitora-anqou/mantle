@@ -30,10 +30,12 @@ type MantleRestoreStatus struct {
 	ClusterID string `json:"clusterID,omitempty"`
 }
 
+// Restore condition and reason constants.
 const (
+	// RestoreConditionReadyToUse is the condition type indicating if the restore is ready to use.
 	RestoreConditionReadyToUse = "ReadyToUse"
 
-	// Reasons for ConditionReadyToUse
+	// RestoreReasonNone indicates there is no problem with the restore.
 	RestoreReasonNone = "NoProblem"
 )
 
@@ -50,6 +52,7 @@ type MantleRestore struct {
 	Status MantleRestoreStatus `json:"status,omitempty"`
 }
 
+// IsReady returns true if the restore is ready to use.
 func (m *MantleRestore) IsReady() bool {
 	return meta.IsStatusConditionTrue(m.Status.Conditions, RestoreConditionReadyToUse)
 }

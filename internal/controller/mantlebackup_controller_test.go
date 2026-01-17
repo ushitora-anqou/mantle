@@ -263,7 +263,7 @@ var _ = Describe("MantleBackup controller", func() {
 			Expect(err).NotTo(HaveOccurred())
 			Expect(snaps).To(HaveLen(1))
 			snapID := backup.Status.SnapID
-			Expect(snapID).To(Equal(&snaps[0].Id))
+			Expect(snapID).To(Equal(&snaps[0].ID))
 
 			err = k8sClient.Delete(ctx, backup)
 			Expect(err).NotTo(HaveOccurred())
@@ -577,7 +577,7 @@ var _ = Describe("MantleBackup controller", func() {
 				g.Expect(err).NotTo(HaveOccurred())
 				g.Expect(snaps).To(HaveLen(1))
 				snapID := backup.Status.SnapID
-				g.Expect(snapID).To(Equal(&snaps[0].Id))
+				g.Expect(snapID).To(Equal(&snaps[0].ID))
 
 				// Make sure export() correctly annotates the MantleBackup resource.
 				syncMode, ok := backup.GetAnnotations()[annotSyncMode]
@@ -1347,7 +1347,7 @@ func createSnapshotForMantleBackupUsingDummyPVC(
 		return errors.New("unreachable: not found")
 	}
 	if err := updateStatus(ctx, k8sClient, backup, func() error {
-		backup.Status.SnapID = &snaps[index].Id
+		backup.Status.SnapID = &snaps[index].ID
 		backup.Status.SnapSize = &snaps[index].Size
 		backup.Status.TransferPartSize = &transferPartSize
 
@@ -1844,7 +1844,7 @@ var _ = Describe("import", func() {
 			err = k8sClient.Get(ctx, types.NamespacedName{Name: backup.GetName(), Namespace: backup.GetNamespace()}, backup)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(backup.IsSnapshotCaptured()).To(BeTrue())
-			Expect(*backup.Status.SnapID).To(Equal(dummySnapshot.Id))
+			Expect(*backup.Status.SnapID).To(Equal(dummySnapshot.ID))
 		})
 	})
 
@@ -2220,7 +2220,7 @@ var _ = Describe("import", func() {
 			snaps, err := mbr.ceph.RBDSnapLs(dummyPoolName, dummyImageName)
 			Expect(err).NotTo(HaveOccurred())
 			index := slices.IndexFunc(snaps, func(snap ceph.RBDSnapshot) bool {
-				return snap.Id == *backup2.Status.SnapID
+				return snap.ID == *backup2.Status.SnapID
 			})
 			Expect(index).NotTo(Equal(-1))
 		})

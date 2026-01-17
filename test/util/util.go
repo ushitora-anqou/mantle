@@ -1,3 +1,4 @@
+// Package util provides testing utilities.
 package util
 
 import (
@@ -9,6 +10,7 @@ var (
 	usedResourceNames = make(map[string]bool)
 )
 
+// GetUniqueName generates a unique name with the given prefix.
 func GetUniqueName(prefix string) string {
 	const letters = "abcdefghijklmnopqrstuvwxyz0123456789"
 	buf := make([]byte, 8)

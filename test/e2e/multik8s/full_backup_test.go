@@ -122,7 +122,7 @@ var _ = Describe("full backup", Label("full-backup"), func() {
 				if err != nil {
 					return fmt.Errorf("failed to find snapshot in PVC: %w", err)
 				}
-				if secondaryMB.Status.SnapID == nil || snap.Id != *secondaryMB.Status.SnapID {
+				if secondaryMB.Status.SnapID == nil || snap.ID != *secondaryMB.Status.SnapID {
 					return errors.New("invalid .status.snapID of secondary MB")
 				}
 

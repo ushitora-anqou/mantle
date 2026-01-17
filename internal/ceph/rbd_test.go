@@ -358,7 +358,7 @@ var _ = Describe("CephCmd.RBDSnapLs", func() {
 		Expect(err).ToNot(HaveOccurred())
 		Expect(snaps).To(HaveLen(1))
 		snap := snaps[0]
-		Expect(snap.Id).To(Equal(int(4)))
+		Expect(snap.ID).To(Equal(int(4)))
 		Expect(snap.Name).To(Equal("test"))
 		Expect(snap.Size).To(Equal(int64(10737418240)))
 		Expect(snap.Protected).To(BeFalse())

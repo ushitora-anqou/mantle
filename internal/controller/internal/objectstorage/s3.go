@@ -15,6 +15,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 )
 
+// S3Bucket implements Bucket interface for S3-compatible storage.
 type S3Bucket struct {
 	caPEMCerts           []byte
 	bucketName, endpoint string
@@ -23,6 +24,7 @@ type S3Bucket struct {
 
 var _ Bucket = &S3Bucket{}
 
+// NewS3Bucket creates a new S3Bucket.
 func NewS3Bucket(ctx context.Context, bucketName, endpoint, accessKeyID, secretAccessKey string, caPEMCerts []byte) (*S3Bucket, error) {
 	var httpClient config.HTTPClient
 	if caPEMCerts != nil {
@@ -43,7 +45,7 @@ func NewS3Bucket(ctx context.Context, bucketName, endpoint, accessKeyID, secretA
 		config.WithHTTPClient(httpClient),
 		config.WithRegion("ceph"),
 		config.WithCredentialsProvider(
-			aws.CredentialsProviderFunc(func(ctx context.Context) (aws.Credentials, error) {
+			aws.CredentialsProviderFunc(func(_ context.Context) (aws.Credentials, error) {
 				return aws.Credentials{
 					AccessKeyID:     accessKeyID,
 					SecretAccessKey: secretAccessKey,
@@ -62,6 +64,7 @@ func NewS3Bucket(ctx context.Context, bucketName, endpoint, accessKeyID, secretA
 	return &S3Bucket{caPEMCerts, bucketName, endpoint, s3Client}, nil
 }
 
+// Exists checks if an object exists in the bucket.
 func (b *S3Bucket) Exists(ctx context.Context, key string) (bool, error) {
 	if _, err := b.s3Client.HeadObject(ctx, &s3.HeadObjectInput{
 		Bucket: &b.bucketName,
@@ -78,6 +81,7 @@ func (b *S3Bucket) Exists(ctx context.Context, key string) (bool, error) {
 	return true, nil
 }
 
+// Delete deletes an object from the bucket.
 func (b *S3Bucket) Delete(ctx context.Context, key string) error {
 	if _, err := b.s3Client.DeleteObject(ctx, &s3.DeleteObjectInput{
 		Bucket: &b.bucketName,

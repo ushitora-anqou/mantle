@@ -93,18 +93,22 @@ type MantleBackupList struct {
 	Items           []MantleBackup `json:"items"`
 }
 
+// IsSnapshotCaptured returns true if the snapshot has been captured.
 func (m *MantleBackup) IsSnapshotCaptured() bool {
 	return meta.IsStatusConditionTrue(m.Status.Conditions, BackupConditionSnapshotCaptured)
 }
 
+// IsSynced returns true if the backup has been synced to the remote cluster.
 func (m *MantleBackup) IsSynced() bool {
 	return meta.IsStatusConditionTrue(m.Status.Conditions, BackupConditionSyncedToRemote)
 }
 
+// IsVerifiedTrue returns true if the backup has been verified successfully.
 func (m *MantleBackup) IsVerifiedTrue() bool {
 	return meta.IsStatusConditionTrue(m.Status.Conditions, BackupConditionVerified)
 }
 
+// IsVerifiedFalse returns true if the backup verification has failed.
 func (m *MantleBackup) IsVerifiedFalse() bool {
 	return meta.IsStatusConditionFalse(m.Status.Conditions, BackupConditionVerified)
 }

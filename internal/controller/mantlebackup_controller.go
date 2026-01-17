@@ -877,7 +877,7 @@ func (r *MantleBackupReconciler) provisionRBDSnapshot(
 		}
 		backup.Status.PVManifest = string(pvJs)
 
-		backup.Status.SnapID = &snapshot.Id
+		backup.Status.SnapID = &snapshot.ID
 		backup.Status.CreatedAt = metav1.NewTime(snapshot.Timestamp.Time)
 		backup.Status.SnapSize = &snapshot.Size
 
@@ -2862,7 +2862,7 @@ func (r *MantleBackupReconciler) markSecondarySnapshotCaptured(
 
 	// Update the status of the MantleBackup to set True to the SnapshotCaptured condition.
 	if err := updateStatus(ctx, r.Client, backup, func() error {
-		backup.Status.SnapID = &snapshot.Id
+		backup.Status.SnapID = &snapshot.ID
 		meta.SetStatusCondition(&backup.Status.Conditions, metav1.Condition{
 			Type:   mantlev1.BackupConditionSnapshotCaptured,
 			Status: metav1.ConditionTrue,
