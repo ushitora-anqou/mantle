@@ -46,8 +46,11 @@ var _ = Describe("Locking", Label("lock"), func() {
 		imageName = pvStored.Spec.CSI.VolumeAttributes["imageName"]
 
 		// locked
-		_, _, err = Kubectl(context.Background(), SecondaryK8sCluster, nil, "exec", "-n", CephClusterNamespace, controllerPod, "--",
-			"rbd", "-p", poolName, "lock", "add", imageName, dummyLockID)
+		_, _, err = Kubectl(
+			context.Background(), SecondaryK8sCluster, nil,
+			"exec", "-n", CephClusterNamespace, controllerPod, "--",
+			"rbd", "-p", poolName, "lock", "add", imageName, dummyLockID,
+		)
 		Expect(err).NotTo(HaveOccurred())
 	})
 
@@ -79,8 +82,11 @@ var _ = Describe("Locking", Label("lock"), func() {
 	})
 
 	It("should unlock the volume in the secondary cluster", func() {
-		stdout, _, err := Kubectl(context.Background(), SecondaryK8sCluster, nil, "exec", "-n", CephClusterNamespace, controllerPod, "--",
-			"rbd", "-p", poolName, "--format", "json", "lock", "ls", imageName)
+		stdout, _, err := Kubectl(
+			context.Background(), SecondaryK8sCluster, nil,
+			"exec", "-n", CephClusterNamespace, controllerPod, "--",
+			"rbd", "-p", poolName, "--format", "json", "lock", "ls", imageName,
+		)
 		Expect(err).NotTo(HaveOccurred())
 		var locks []*ceph.RBDLock
 		err = json.Unmarshal(stdout, &locks)
@@ -88,8 +94,11 @@ var _ = Describe("Locking", Label("lock"), func() {
 		Expect(locks).To(HaveLen(1))
 
 		// unlock
-		_, _, err = Kubectl(context.Background(), SecondaryK8sCluster, nil, "exec", "-n", CephClusterNamespace, controllerPod, "--",
-			"rbd", "-p", poolName, "lock", "rm", imageName, dummyLockID, locks[0].Locker)
+		_, _, err = Kubectl(
+			context.Background(), SecondaryK8sCluster, nil,
+			"exec", "-n", CephClusterNamespace, controllerPod, "--",
+			"rbd", "-p", poolName, "lock", "rm", imageName, dummyLockID, locks[0].Locker,
+		)
 		Expect(err).NotTo(HaveOccurred())
 	})
 
@@ -99,8 +108,11 @@ var _ = Describe("Locking", Label("lock"), func() {
 
 	It("should not exist locks after backup completion", func() {
 		Eventually(func(g Gomega) {
-			stdout, _, err := Kubectl(context.Background(), SecondaryK8sCluster, nil, "exec", "-n", CephClusterNamespace, controllerPod, "--",
-				"rbd", "-p", poolName, "--format", "json", "lock", "ls", imageName)
+			stdout, _, err := Kubectl(
+				context.Background(), SecondaryK8sCluster, nil,
+				"exec", "-n", CephClusterNamespace, controllerPod, "--",
+				"rbd", "-p", poolName, "--format", "json", "lock", "ls", imageName,
+			)
 			g.Expect(err).NotTo(HaveOccurred())
 			var locks []*ceph.RBDLock
 			err = json.Unmarshal(stdout, &locks)

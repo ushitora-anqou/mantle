@@ -35,49 +35,56 @@ var _ = Describe("change to standalone", Label("change-to-standalone"), func() {
 		Expect(err).NotTo(HaveOccurred())
 	})
 
-	It("should delete MantleBackup created by primary mantle from standalone mantle", func(ctx SpecContext) {
-		By("deleting the MantleBackup in the primary cluster")
-		_, _, err := Kubectl(context.Background(), PrimaryK8sCluster, nil, "delete", "mb", "-n", namespace, backupName, "--wait=false")
-		Expect(err).NotTo(HaveOccurred())
+	It("should delete MantleBackup created by primary mantle from standalone mantle",
+		func(ctx SpecContext) {
+			By("deleting the MantleBackup in the primary cluster")
+			_, _, err := Kubectl(context.Background(), PrimaryK8sCluster, nil,
+				"delete", "mb", "-n", namespace, backupName, "--wait=false")
+			Expect(err).NotTo(HaveOccurred())
 
-		By("checking that the MantleBackup is actually deleted")
-		Eventually(ctx, func(g Gomega) {
-			stdout, _, err := Kubectl(context.Background(), PrimaryK8sCluster, nil, "get", "mb", "-n", namespace, "-o", "json")
-			g.Expect(err).NotTo(HaveOccurred())
-			var mbs mantlev1.MantleBackupList
-			err = json.Unmarshal(stdout, &mbs)
-			g.Expect(err).NotTo(HaveOccurred())
-			found := false
-			for _, mb := range mbs.Items {
-				if mb.GetName() == backupName {
-					found = true
+			By("checking that the MantleBackup is actually deleted")
+			Eventually(ctx, func(g Gomega) {
+				stdout, _, err := Kubectl(context.Background(), PrimaryK8sCluster, nil, "get", "mb", "-n", namespace, "-o", "json")
+				g.Expect(err).NotTo(HaveOccurred())
+				var mbs mantlev1.MantleBackupList
+				err = json.Unmarshal(stdout, &mbs)
+				g.Expect(err).NotTo(HaveOccurred())
+				found := false
+				for _, mb := range mbs.Items {
+					if mb.GetName() == backupName {
+						found = true
+					}
 				}
-			}
-			g.Expect(found).To(BeFalse())
-		}).Should(Succeed())
-	})
+				g.Expect(found).To(BeFalse())
+			}).Should(Succeed())
+		})
 
-	It("should NOT delete MantleBackup created by secondary mantle from standalone mantle", func(ctx SpecContext) {
-		By("deleting the MantleBackup in the secondary cluster")
-		_, _, err := Kubectl(context.Background(), SecondaryK8sCluster, nil, "delete", "mb", "-n", namespace, backupName, "--wait=false")
-		Expect(err).NotTo(HaveOccurred())
+	It("should NOT delete MantleBackup created by secondary mantle from standalone mantle",
+		func(ctx SpecContext) {
+			By("deleting the MantleBackup in the secondary cluster")
+			_, _, err := Kubectl(context.Background(), SecondaryK8sCluster, nil,
+				"delete", "mb", "-n", namespace, backupName, "--wait=false")
+			Expect(err).NotTo(HaveOccurred())
 
-		By("checking that the MantleBackup is NOT deleted")
-		Consistently(ctx, func(g Gomega) {
-			stdout, _, err := Kubectl(context.Background(), SecondaryK8sCluster, nil, "get", "mb", "-n", namespace, "-o", "json")
-			g.Expect(err).NotTo(HaveOccurred())
-			var mbs mantlev1.MantleBackupList
-			err = json.Unmarshal(stdout, &mbs)
-			g.Expect(err).NotTo(HaveOccurred())
-			found := false
-			for _, mb := range mbs.Items {
-				if mb.GetName() == backupName {
-					found = true
+			By("checking that the MantleBackup is NOT deleted")
+			Consistently(ctx, func(g Gomega) {
+				stdout, _, err := Kubectl(
+					context.Background(), SecondaryK8sCluster, nil,
+					"get", "mb", "-n", namespace, "-o", "json",
+				)
+				g.Expect(err).NotTo(HaveOccurred())
+				var mbs mantlev1.MantleBackupList
+				err = json.Unmarshal(stdout, &mbs)
+				g.Expect(err).NotTo(HaveOccurred())
+				found := false
+				for _, mb := range mbs.Items {
+					if mb.GetName() == backupName {
+						found = true
+					}
 				}
-			}
-			g.Expect(found).To(BeTrue())
-		}, "10s", "1s").Should(Succeed())
-	})
+				g.Expect(found).To(BeTrue())
+			}, "10s", "1s").Should(Succeed())
+		})
 
 	It("should change their roles back to primary/secondary", func() {
 		By("reverting the standalone mantle back to primary in the primary K8s cluster")

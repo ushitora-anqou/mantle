@@ -66,6 +66,11 @@ linters:
           - staticcheck
         text: "SA1019: .*\\.Requeue is deprecated: Use `RequeueAfter` instead."
 
+      # exclude contextcheck for SetupWithManager - it's a library interface that doesn't accept context
+      - linters:
+          - contextcheck
+        text: "Function `.*->SetupWithManager` should pass the context parameter"
+
 formatters:
   enable:
     - gofmt

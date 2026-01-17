@@ -155,7 +155,11 @@ func ApplyMantleBackupTemplate(ctx context.Context, clusterNo int, namespace, pv
 	return nil
 }
 
-func ApplyMantleBackupConfigTemplate(ctx context.Context, clusterNo int, namespace, pvcName, backupConfigName string) error {
+func ApplyMantleBackupConfigTemplate(
+	ctx context.Context,
+	clusterNo int,
+	namespace, pvcName, backupConfigName string,
+) error {
 	manifest := fmt.Sprintf(testMantleBackupConfigTemplate, backupConfigName, namespace, pvcName)
 	_, _, err := Kubectl(ctx, clusterNo, []byte(manifest), "apply", "-f", "-")
 	if err != nil {
@@ -625,8 +629,11 @@ func EnsureCorrectRestoration(
 	Eventually(ctx, func(g Gomega) {
 		err := ApplyMountDeployTemplate(context.Background(), clusterNo, namespace, mountDeployName, restoreName)
 		g.Expect(err).NotTo(HaveOccurred())
-		stdout, _, err := Kubectl(context.Background(), clusterNo, nil, "exec", "-n", namespace, "deploy/"+mountDeployName, "--",
-			"bash", "-c", "sha256sum /volume/data | awk '{print $1}'")
+		stdout, _, err := Kubectl(
+			context.Background(), clusterNo, nil,
+			"exec", "-n", namespace, "deploy/"+mountDeployName, "--",
+			"bash", "-c", "sha256sum /volume/data | awk '{print $1}'",
+		)
 		g.Expect(err).NotTo(HaveOccurred())
 		g.Expect(string(stdout)).To(Equal(writtenDataHash))
 	}).Should(Succeed())
@@ -984,7 +991,10 @@ func WaitTemporaryResourcesDeleted(ctx SpecContext, primaryMB, secondaryMB *mant
 func DeleteMantleBackup(cluster int, namespace, backupName string) {
 	GinkgoHelper()
 	By("deleting MantleBackup")
-	stdout, stderr, err := Kubectl(context.Background(), cluster, nil, "delete", "-n", namespace, "mantlebackup", backupName, "--timeout=3m")
+	stdout, stderr, err := Kubectl(
+		context.Background(), cluster, nil,
+		"delete", "-n", namespace, "mantlebackup", backupName, "--timeout=3m",
+	)
 	Expect(err).NotTo(HaveOccurred(), "stdout: %s, stderr: %s", string(stdout), string(stderr))
 }
 

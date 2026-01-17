@@ -33,8 +33,11 @@ var _ = Describe("metrics tests", func() {
 			Eventually(ctx, func(g Gomega) {
 				controllerPod, err := GetControllerPodName(context.Background(), PrimaryK8sCluster)
 				g.Expect(err).NotTo(HaveOccurred())
-				stdout, _, err := Kubectl(context.Background(), PrimaryK8sCluster, nil, "exec", "-n", CephClusterNamespace, controllerPod, "--",
-					"curl", "-s", "http://localhost:8080/metrics")
+				stdout, _, err := Kubectl(
+					context.Background(), PrimaryK8sCluster, nil,
+					"exec", "-n", CephClusterNamespace, controllerPod, "--",
+					"curl", "-s", "http://localhost:8080/metrics",
+				)
 				g.Expect(err).NotTo(HaveOccurred())
 				g.Expect(strings.Contains(string(stdout), metricName)).To(BeTrue())
 			}).Should(Succeed())
