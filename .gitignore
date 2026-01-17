@@ -35,3 +35,4 @@ test/e2e/testdata/values-mantle-secondary.yaml
 include/
 
 .envrc
+CLAUDE.md
