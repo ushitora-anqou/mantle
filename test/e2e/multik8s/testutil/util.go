@@ -103,17 +103,17 @@ func getKubectlInvocation(clusterNo int) ([]string, error) {
 }
 
 // input can be nil.
-func Kubectl(clusterNo int, input []byte, args ...string) ([]byte, []byte, error) {
+func Kubectl(ctx context.Context, clusterNo int, input []byte, args ...string) ([]byte, []byte, error) {
 	fields, err := getKubectlInvocation(clusterNo)
 	if err != nil {
 		panic(err)
 	}
 	fields = append(fields, args...)
 
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Minute)
+	execCtx, cancel := context.WithTimeout(ctx, 10*time.Minute)
 	defer cancel()
 
-	return execAtLocal(ctx, fields[0], input, fields[1:]...)
+	return execAtLocal(execCtx, fields[0], input, fields[1:]...)
 }
 
 func runMakeCommand(args ...string) error {
@@ -133,9 +133,9 @@ func runMakeCommand(args ...string) error {
 	return nil
 }
 
-func CheckDeploymentReady(clusterNo int, namespace, name string) error {
+func CheckDeploymentReady(ctx context.Context, clusterNo int, namespace, name string) error {
 	_, stderr, err := Kubectl(
-		clusterNo, nil,
+		ctx, clusterNo, nil,
 		"-n", namespace, "wait", "--for=condition=Available", "deploy", name, "--timeout=1m",
 	)
 	if err != nil {
@@ -145,9 +145,9 @@ func CheckDeploymentReady(clusterNo int, namespace, name string) error {
 	return nil
 }
 
-func ApplyMantleBackupTemplate(clusterNo int, namespace, pvcName, backupName string) error {
+func ApplyMantleBackupTemplate(ctx context.Context, clusterNo int, namespace, pvcName, backupName string) error {
 	manifest := fmt.Sprintf(testMantleBackupTemplate, backupName, backupName, namespace, pvcName)
-	_, _, err := Kubectl(clusterNo, []byte(manifest), "apply", "-f", "-")
+	_, _, err := Kubectl(ctx, clusterNo, []byte(manifest), "apply", "-f", "-")
 	if err != nil {
 		return fmt.Errorf("kubectl apply mantlebackup failed. err: %w", err)
 	}
@@ -155,9 +155,9 @@ func ApplyMantleBackupTemplate(clusterNo int, namespace, pvcName, backupName str
 	return nil
 }
 
-func ApplyMantleBackupConfigTemplate(clusterNo int, namespace, pvcName, backupConfigName string) error {
+func ApplyMantleBackupConfigTemplate(ctx context.Context, clusterNo int, namespace, pvcName, backupConfigName string) error {
 	manifest := fmt.Sprintf(testMantleBackupConfigTemplate, backupConfigName, namespace, pvcName)
-	_, _, err := Kubectl(clusterNo, []byte(manifest), "apply", "-f", "-")
+	_, _, err := Kubectl(ctx, clusterNo, []byte(manifest), "apply", "-f", "-")
 	if err != nil {
 		return fmt.Errorf("kubectl apply mantlebackupconfig failed. err: %w", err)
 	}
@@ -165,9 +165,9 @@ func ApplyMantleBackupConfigTemplate(clusterNo int, namespace, pvcName, backupCo
 	return nil
 }
 
-func ApplyMantleRestoreTemplate(clusterNo int, namespace, restoreName, backupName string) error {
+func ApplyMantleRestoreTemplate(ctx context.Context, clusterNo int, namespace, restoreName, backupName string) error {
 	manifest := fmt.Sprintf(testMantleRestoreTemplate, restoreName, restoreName, namespace, backupName)
-	_, _, err := Kubectl(clusterNo, []byte(manifest), "apply", "-f", "-")
+	_, _, err := Kubectl(ctx, clusterNo, []byte(manifest), "apply", "-f", "-")
 	if err != nil {
 		return fmt.Errorf("kubectl apply mantlerestore failed. err: %w", err)
 	}
@@ -175,9 +175,9 @@ func ApplyMantleRestoreTemplate(clusterNo int, namespace, restoreName, backupNam
 	return nil
 }
 
-func applyPodMountVolumeTemplate(clusterNo int, namespace, podName, pvcName string) error {
+func applyPodMountVolumeTemplate(ctx context.Context, clusterNo int, namespace, podName, pvcName string) error {
 	manifest := fmt.Sprintf(testPodMountVolumeTemplate, podName, namespace, pvcName)
-	_, _, err := Kubectl(clusterNo, []byte(manifest), "apply", "-n", namespace, "-f", "-")
+	_, _, err := Kubectl(ctx, clusterNo, []byte(manifest), "apply", "-n", namespace, "-f", "-")
 	if err != nil {
 		return fmt.Errorf("kubectl apply failed. err: %w", err)
 	}
@@ -185,9 +185,9 @@ func applyPodMountVolumeTemplate(clusterNo int, namespace, podName, pvcName stri
 	return nil
 }
 
-func applyPVCTemplate(clusterNo int, namespace, name string) error {
+func applyPVCTemplate(ctx context.Context, clusterNo int, namespace, name string) error {
 	manifest := fmt.Sprintf(testPVCTemplate, name)
-	_, _, err := Kubectl(clusterNo, []byte(manifest), "apply", "-n", namespace, "-f", "-")
+	_, _, err := Kubectl(ctx, clusterNo, []byte(manifest), "apply", "-n", namespace, "-f", "-")
 	if err != nil {
 		return fmt.Errorf("kubectl apply pvc failed. err: %w", err)
 	}
@@ -195,9 +195,9 @@ func applyPVCTemplate(clusterNo int, namespace, name string) error {
 	return nil
 }
 
-func ApplyMountDeployTemplate(clusterNo int, namespace, name, pvcName string) error {
+func ApplyMountDeployTemplate(ctx context.Context, clusterNo int, namespace, name, pvcName string) error {
 	manifest := fmt.Sprintf(mountDeployTemplate, name, namespace, name, name, pvcName)
-	_, _, err := Kubectl(clusterNo, []byte(manifest), "apply", "-n", namespace, "-f", "-")
+	_, _, err := Kubectl(ctx, clusterNo, []byte(manifest), "apply", "-n", namespace, "-f", "-")
 	if err != nil {
 		return fmt.Errorf("kubectl apply mount deploy failed. err: %w", err)
 	}
@@ -205,9 +205,9 @@ func ApplyMountDeployTemplate(clusterNo int, namespace, name, pvcName string) er
 	return nil
 }
 
-func ApplyWriteJobTemplate(clusterNo int, namespace, name, pvcName string) error {
+func ApplyWriteJobTemplate(ctx context.Context, clusterNo int, namespace, name, pvcName string) error {
 	manifest := fmt.Sprintf(writeJobTemplate, name, namespace, pvcName)
-	_, _, err := Kubectl(clusterNo, []byte(manifest), "apply", "-n", namespace, "-f", "-")
+	_, _, err := Kubectl(ctx, clusterNo, []byte(manifest), "apply", "-n", namespace, "-f", "-")
 	if err != nil {
 		return fmt.Errorf("kubectl apply write job failed. err: %w", err)
 	}
@@ -215,8 +215,8 @@ func ApplyWriteJobTemplate(clusterNo int, namespace, name, pvcName string) error
 	return nil
 }
 
-func CreateNamespace(clusterNo int, name string) error {
-	_, _, err := Kubectl(clusterNo, nil, "create", "ns", name)
+func CreateNamespace(ctx context.Context, clusterNo int, name string) error {
+	_, _, err := Kubectl(ctx, clusterNo, nil, "create", "ns", name)
 	if err != nil {
 		return fmt.Errorf("kubectl create ns failed. err: %w", err)
 	}
@@ -224,11 +224,11 @@ func CreateNamespace(clusterNo int, name string) error {
 	return nil
 }
 
-func ApplyRBDPoolAndSCTemplate(clusterNo int, namespace string) error {
+func ApplyRBDPoolAndSCTemplate(ctx context.Context, clusterNo int, namespace string) error {
 	manifest := fmt.Sprintf(
 		testRBDPoolSCTemplate, namespace,
 		namespace, namespace, namespace, namespace)
-	_, _, err := Kubectl(clusterNo, []byte(manifest), "apply", "-n", namespace, "-f", "-")
+	_, _, err := Kubectl(ctx, clusterNo, []byte(manifest), "apply", "-n", namespace, "-f", "-")
 	if err != nil {
 		return err
 	}
@@ -236,13 +236,13 @@ func ApplyRBDPoolAndSCTemplate(clusterNo int, namespace string) error {
 	return nil
 }
 
-func GetObject[T any](clusterNo int, kind, namespace, name string) (*T, error) {
+func GetObject[T any](ctx context.Context, clusterNo int, kind, namespace, name string) (*T, error) {
 	var stdout []byte
 	var err error
 	if namespace == "" {
-		stdout, _, err = Kubectl(clusterNo, nil, "get", kind, name, "-o", "json")
+		stdout, _, err = Kubectl(ctx, clusterNo, nil, "get", kind, name, "-o", "json")
 	} else {
-		stdout, _, err = Kubectl(clusterNo, nil, "get", kind, "-n", namespace, name, "-o", "json")
+		stdout, _, err = Kubectl(ctx, clusterNo, nil, "get", kind, "-n", namespace, name, "-o", "json")
 	}
 	if err != nil {
 		return nil, err
@@ -256,37 +256,37 @@ func GetObject[T any](clusterNo int, kind, namespace, name string) (*T, error) {
 	return &obj, nil
 }
 
-func GetMB(clusterNo int, namespace, name string) (*mantlev1.MantleBackup, error) {
-	return GetObject[mantlev1.MantleBackup](clusterNo, "mantlebackup", namespace, name)
+func GetMB(ctx context.Context, clusterNo int, namespace, name string) (*mantlev1.MantleBackup, error) {
+	return GetObject[mantlev1.MantleBackup](ctx, clusterNo, "mantlebackup", namespace, name)
 }
 
-func GetPVC(clusterNo int, namespace, name string) (*corev1.PersistentVolumeClaim, error) {
-	return GetObject[corev1.PersistentVolumeClaim](clusterNo, "pvc", namespace, name)
+func GetPVC(ctx context.Context, clusterNo int, namespace, name string) (*corev1.PersistentVolumeClaim, error) {
+	return GetObject[corev1.PersistentVolumeClaim](ctx, clusterNo, "pvc", namespace, name)
 }
 
-func GetPV(clusterNo int, name string) (*corev1.PersistentVolume, error) {
-	return GetObject[corev1.PersistentVolume](clusterNo, "pv", "", name)
+func GetPV(ctx context.Context, clusterNo int, name string) (*corev1.PersistentVolume, error) {
+	return GetObject[corev1.PersistentVolume](ctx, clusterNo, "pv", "", name)
 }
 
-func GetMR(clusterNo int, namespace, name string) (*mantlev1.MantleRestore, error) {
-	return GetObject[mantlev1.MantleRestore](clusterNo, "mantlerestore", namespace, name)
+func GetMR(ctx context.Context, clusterNo int, namespace, name string) (*mantlev1.MantleRestore, error) {
+	return GetObject[mantlev1.MantleRestore](ctx, clusterNo, "mantlerestore", namespace, name)
 }
 
-func GetDeploy(clusterNo int, namespace, name string) (*appsv1.Deployment, error) {
-	return GetObject[appsv1.Deployment](clusterNo, "deploy", namespace, name)
+func GetDeploy(ctx context.Context, clusterNo int, namespace, name string) (*appsv1.Deployment, error) {
+	return GetObject[appsv1.Deployment](ctx, clusterNo, "deploy", namespace, name)
 }
 
-func GetJob(clusterNo int, namespace, name string) (*batchv1.Job, error) {
-	return GetObject[batchv1.Job](clusterNo, "job", namespace, name)
+func GetJob(ctx context.Context, clusterNo int, namespace, name string) (*batchv1.Job, error) {
+	return GetObject[batchv1.Job](ctx, clusterNo, "job", namespace, name)
 }
 
-func GetObjectList[T any](clusterNo int, kind, namespace string) (*T, error) {
+func GetObjectList[T any](ctx context.Context, clusterNo int, kind, namespace string) (*T, error) {
 	var stdout []byte
 	var err error
 	if namespace == "" {
-		stdout, _, err = Kubectl(clusterNo, nil, "get", kind, "-o", "json")
+		stdout, _, err = Kubectl(ctx, clusterNo, nil, "get", kind, "-o", "json")
 	} else {
-		stdout, _, err = Kubectl(clusterNo, nil, "get", kind, "-n", namespace, "-o", "json")
+		stdout, _, err = Kubectl(ctx, clusterNo, nil, "get", kind, "-n", namespace, "-o", "json")
 	}
 	if err != nil {
 		return nil, err
@@ -300,28 +300,28 @@ func GetObjectList[T any](clusterNo int, kind, namespace string) (*T, error) {
 	return &objList, nil
 }
 
-func GetMBList(clusterNo int, namespace string) (*mantlev1.MantleBackupList, error) {
-	return GetObjectList[mantlev1.MantleBackupList](clusterNo, "mantlebackup", namespace)
+func GetMBList(ctx context.Context, clusterNo int, namespace string) (*mantlev1.MantleBackupList, error) {
+	return GetObjectList[mantlev1.MantleBackupList](ctx, clusterNo, "mantlebackup", namespace)
 }
 
-func GetPodList(clusterNo int, namespace string) (*corev1.PodList, error) {
-	return GetObjectList[corev1.PodList](clusterNo, "pod", namespace)
+func GetPodList(ctx context.Context, clusterNo int, namespace string) (*corev1.PodList, error) {
+	return GetObjectList[corev1.PodList](ctx, clusterNo, "pod", namespace)
 }
 
-func GetJobList(clusterNo int, namespace string) (*batchv1.JobList, error) {
-	return GetObjectList[batchv1.JobList](clusterNo, "job", namespace)
+func GetJobList(ctx context.Context, clusterNo int, namespace string) (*batchv1.JobList, error) {
+	return GetObjectList[batchv1.JobList](ctx, clusterNo, "job", namespace)
 }
 
-func GetPVCList(clusterNo int, namespace string) (*corev1.PersistentVolumeClaimList, error) {
-	return GetObjectList[corev1.PersistentVolumeClaimList](clusterNo, "pvc", namespace)
+func GetPVCList(ctx context.Context, clusterNo int, namespace string) (*corev1.PersistentVolumeClaimList, error) {
+	return GetObjectList[corev1.PersistentVolumeClaimList](ctx, clusterNo, "pvc", namespace)
 }
 
-func GetPVList(clusterNo int) (*corev1.PersistentVolumeList, error) {
-	return GetObjectList[corev1.PersistentVolumeList](clusterNo, "pv", "")
+func GetPVList(ctx context.Context, clusterNo int) (*corev1.PersistentVolumeList, error) {
+	return GetObjectList[corev1.PersistentVolumeList](ctx, clusterNo, "pv", "")
 }
 
-func GetEventList(clusterNo int, namespace string) (*corev1.EventList, error) {
-	return GetObjectList[corev1.EventList](clusterNo, "event", namespace)
+func GetEventList(ctx context.Context, clusterNo int, namespace string) (*corev1.EventList, error) {
+	return GetObjectList[corev1.EventList](ctx, clusterNo, "event", namespace)
 }
 
 func ChangeClusterRole(clusterNo int, newRole string) error {
@@ -366,7 +366,7 @@ func (c *ObjectStorageClient) listObjects(ctx context.Context) (*s3.ListObjectsV
 
 func CreateObjectStorageClient(ctx context.Context) (*ObjectStorageClient, error) {
 	// Find the endpoint of the object storage from the command-line arguments for mantle-controller.
-	stdout, _, err := Kubectl(PrimaryK8sCluster, nil,
+	stdout, _, err := Kubectl(ctx, PrimaryK8sCluster, nil,
 		"get", "deploy", "-n", CephClusterNamespace, "mantle-controller", "-o", "json")
 	if err != nil {
 		return nil, fmt.Errorf("failed to get deploy: %w", err)
@@ -385,7 +385,7 @@ func CreateObjectStorageClient(ctx context.Context) (*ObjectStorageClient, error
 	objectStorageEndpoint, _ := strings.CutPrefix(args[endpointIndex], "--object-storage-endpoint=")
 
 	// Get the bucket name from the OBC.
-	stdout, _, err = Kubectl(SecondaryK8sCluster, nil,
+	stdout, _, err = Kubectl(ctx, SecondaryK8sCluster, nil,
 		"get", "obc", "-n", CephClusterNamespace, "export-data", "-o", "json")
 	if err != nil {
 		return nil, fmt.Errorf("failed to get obc: %w", err)
@@ -400,7 +400,7 @@ func CreateObjectStorageClient(ctx context.Context) (*ObjectStorageClient, error
 	}
 
 	// Get the credentials from the Secret.
-	stdout, _, err = Kubectl(SecondaryK8sCluster, nil,
+	stdout, _, err = Kubectl(ctx, SecondaryK8sCluster, nil,
 		"get", "secret", "-n", CephClusterNamespace, "export-data", "-o", "json")
 	if err != nil {
 		return nil, fmt.Errorf("failed to get export-data secret: %w", err)
@@ -449,8 +449,8 @@ func IsJobConditionTrue(conditions []batchv1.JobCondition, conditionType batchv1
 	return false
 }
 
-func GetControllerPodName(clusterNo int) (string, error) {
-	stdout, _, err := Kubectl(clusterNo, nil, "get", "pod", "-n", CephClusterNamespace,
+func GetControllerPodName(ctx context.Context, clusterNo int) (string, error) {
+	stdout, _, err := Kubectl(ctx, clusterNo, nil, "get", "pod", "-n", CephClusterNamespace,
 		"-l", "app.kubernetes.io/name=mantle", "-o", "jsonpath={.items[0].metadata.name}")
 
 	return string(stdout), err
@@ -460,11 +460,11 @@ func WaitControllerToBeReady() {
 	GinkgoHelper()
 	It("wait for mantle-controller to be ready", func() {
 		Eventually(func() error {
-			return CheckDeploymentReady(PrimaryK8sCluster, CephClusterNamespace, "mantle-controller")
+			return CheckDeploymentReady(context.Background(), PrimaryK8sCluster, CephClusterNamespace, "mantle-controller")
 		}).Should(Succeed())
 
 		Eventually(func() error {
-			return CheckDeploymentReady(SecondaryK8sCluster, CephClusterNamespace, "mantle-controller")
+			return CheckDeploymentReady(context.Background(), SecondaryK8sCluster, CephClusterNamespace, "mantle-controller")
 		}).Should(Succeed())
 	})
 }
@@ -473,29 +473,29 @@ func SetupEnvironment(namespace string) {
 	GinkgoHelper()
 	By("setting up the environment")
 	Eventually(func() error {
-		return CreateNamespace(PrimaryK8sCluster, namespace)
+		return CreateNamespace(context.Background(), PrimaryK8sCluster, namespace)
 	}).Should(Succeed())
 	Eventually(func() error {
-		return CreateNamespace(SecondaryK8sCluster, namespace)
+		return CreateNamespace(context.Background(), SecondaryK8sCluster, namespace)
 	}).Should(Succeed())
 	Eventually(func() error {
-		return ApplyRBDPoolAndSCTemplate(PrimaryK8sCluster, CephClusterNamespace)
+		return ApplyRBDPoolAndSCTemplate(context.Background(), PrimaryK8sCluster, CephClusterNamespace)
 	}).Should(Succeed())
 	Eventually(func() error {
-		return ApplyRBDPoolAndSCTemplate(SecondaryK8sCluster, CephClusterNamespace)
+		return ApplyRBDPoolAndSCTemplate(context.Background(), SecondaryK8sCluster, CephClusterNamespace)
 	}).Should(Succeed())
 }
 
 func CreatePod(cluster int, namespace, podName, pvcName string) {
 	GinkgoHelper()
-	err := applyPodMountVolumeTemplate(cluster, namespace, podName, pvcName)
+	err := applyPodMountVolumeTemplate(context.Background(), cluster, namespace, podName, pvcName)
 	Expect(err).NotTo(HaveOccurred())
 }
 
 func CreatePVC(ctx SpecContext, cluster int, namespace, name string) {
 	GinkgoHelper()
 	Eventually(ctx, func() error {
-		return applyPVCTemplate(cluster, namespace, name)
+		return applyPVCTemplate(context.Background(), cluster, namespace, name)
 	}).Should(Succeed())
 }
 
@@ -504,14 +504,14 @@ func WriteRandomDataToPV(ctx SpecContext, cluster int, namespace, pvcName string
 	By("writing some random data to PV(C)")
 	writeJobName := util.GetUniqueName("job-")
 	Eventually(ctx, func() error {
-		return ApplyWriteJobTemplate(cluster, namespace, writeJobName, pvcName)
+		return ApplyWriteJobTemplate(context.Background(), cluster, namespace, writeJobName, pvcName)
 	}).Should(Succeed())
 	Eventually(ctx, func(g Gomega) {
-		job, err := GetJob(cluster, namespace, writeJobName)
+		job, err := GetJob(context.Background(), cluster, namespace, writeJobName)
 		g.Expect(err).NotTo(HaveOccurred())
 		g.Expect(IsJobConditionTrue(job.Status.Conditions, batchv1.JobComplete)).To(BeTrue())
 	}).Should(Succeed())
-	stdout, _, err := Kubectl(cluster, nil, "logs", "-n", namespace, "job/"+writeJobName)
+	stdout, _, err := Kubectl(context.Background(), cluster, nil, "logs", "-n", namespace, "job/"+writeJobName)
 	Expect(err).NotTo(HaveOccurred())
 	Expect(stdout).NotTo(BeEmpty())
 
@@ -522,7 +522,7 @@ func CreateMantleBackup(cluster int, namespace, pvcName, backupName string) {
 	GinkgoHelper()
 	By(fmt.Sprintf("creating a MantleBackup object @%d:%s/%s", cluster, namespace, backupName))
 	Eventually(func() error {
-		return ApplyMantleBackupTemplate(cluster, namespace, pvcName, backupName)
+		return ApplyMantleBackupTemplate(context.Background(), cluster, namespace, pvcName, backupName)
 	}).Should(Succeed())
 }
 
@@ -530,7 +530,7 @@ func CreateMantleBackupConfig(cluster int, namespace, pvcName, backupConfigName 
 	GinkgoHelper()
 	By(fmt.Sprintf("creating a MantleBackupConfig object @%d:%s/%s for %s", cluster, namespace, backupConfigName, pvcName))
 	Eventually(func() error {
-		return ApplyMantleBackupConfigTemplate(cluster, namespace, pvcName, backupConfigName)
+		return ApplyMantleBackupConfigTemplate(context.Background(), cluster, namespace, pvcName, backupConfigName)
 	}).Should(Succeed())
 }
 
@@ -538,7 +538,7 @@ func WaitMantleBackupSnapshotCaptured(cluster int, namespace, backupName string)
 	GinkgoHelper()
 	By("checking MantleBackup's SnapshotCaptured status")
 	Eventually(func() error {
-		mb, err := GetMB(cluster, namespace, backupName)
+		mb, err := GetMB(context.Background(), cluster, namespace, backupName)
 		if err != nil {
 			return err
 		}
@@ -554,7 +554,7 @@ func WaitMantleBackupVerified(cluster int, namespace, backupName string) {
 	GinkgoHelper()
 	By("checking MantleBackup's Verified status")
 	Eventually(func() error {
-		mb, err := GetMB(cluster, namespace, backupName)
+		mb, err := GetMB(context.Background(), cluster, namespace, backupName)
 		if err != nil {
 			return err
 		}
@@ -570,7 +570,7 @@ func WaitMantleBackupSynced(namespace, backupName string) {
 	GinkgoHelper()
 	By(fmt.Sprintf("checking MantleBackup's SyncedToRemote status: %s/%s", namespace, backupName))
 	Eventually(func() error {
-		mb, err := GetMB(PrimaryK8sCluster, namespace, backupName)
+		mb, err := GetMB(context.Background(), PrimaryK8sCluster, namespace, backupName)
 		if err != nil {
 			return err
 		}
@@ -585,7 +585,7 @@ func WaitMantleBackupSynced(namespace, backupName string) {
 func EnsureMantleBackupExists(ctx SpecContext, cluster int, namespace, backupName string) {
 	GinkgoHelper()
 	By("checking MantleBackup exists")
-	_, err := GetMB(cluster, namespace, backupName)
+	_, err := GetMB(context.Background(), cluster, namespace, backupName)
 	Expect(err).NotTo(HaveOccurred())
 }
 
@@ -593,7 +593,7 @@ func EnsureMantleBackupNotExist(ctx SpecContext, cluster int, namespace, backupN
 	GinkgoHelper()
 	By("checking MantleBackup doesn't exist")
 	Consistently(ctx, func(g Gomega) {
-		mbs, err := GetMBList(cluster, namespace)
+		mbs, err := GetMBList(context.Background(), cluster, namespace)
 		g.Expect(err).NotTo(HaveOccurred())
 		exist := slices.ContainsFunc(mbs.Items, func(mb mantlev1.MantleBackup) bool {
 			return mb.GetName() == backupName
@@ -613,19 +613,19 @@ func EnsureCorrectRestoration(
 	By(fmt.Sprintf("%s: %s: creating MantleRestore by using the MantleBackup replicated above",
 		clusterName, backupName))
 	Eventually(ctx, func() error {
-		return ApplyMantleRestoreTemplate(clusterNo, namespace, restoreName, backupName)
+		return ApplyMantleRestoreTemplate(context.Background(), clusterNo, namespace, restoreName, backupName)
 	}).Should(Succeed())
 	By(fmt.Sprintf("%s: %s: checking the MantleRestore can be ready to use", clusterName, backupName))
 	Eventually(ctx, func(g Gomega) {
-		mr, err := GetMR(clusterNo, namespace, restoreName)
+		mr, err := GetMR(context.Background(), clusterNo, namespace, restoreName)
 		g.Expect(err).NotTo(HaveOccurred())
 		g.Expect(mr.IsReady()).To(BeTrue())
 	}).Should(Succeed())
 	By(fmt.Sprintf("%s: %s: checking the MantleRestore has the correct contents", clusterName, backupName))
 	Eventually(ctx, func(g Gomega) {
-		err := ApplyMountDeployTemplate(clusterNo, namespace, mountDeployName, restoreName)
+		err := ApplyMountDeployTemplate(context.Background(), clusterNo, namespace, mountDeployName, restoreName)
 		g.Expect(err).NotTo(HaveOccurred())
-		stdout, _, err := Kubectl(clusterNo, nil, "exec", "-n", namespace, "deploy/"+mountDeployName, "--",
+		stdout, _, err := Kubectl(context.Background(), clusterNo, nil, "exec", "-n", namespace, "deploy/"+mountDeployName, "--",
 			"bash", "-c", "sha256sum /volume/data | awk '{print $1}'")
 		g.Expect(err).NotTo(HaveOccurred())
 		g.Expect(string(stdout)).To(Equal(writtenDataHash))
@@ -636,6 +636,7 @@ func ResumeObjectStorage(ctx SpecContext) {
 	GinkgoHelper()
 	By("resuming the object storage")
 	_, _, err := Kubectl(
+		context.Background(),
 		SecondaryK8sCluster,
 		nil,
 		"patch",
@@ -651,6 +652,7 @@ func ResumeObjectStorage(ctx SpecContext) {
 	Expect(err).NotTo(HaveOccurred())
 
 	_, _, err = Kubectl(
+		context.Background(),
 		SecondaryK8sCluster,
 		nil,
 		"delete", "-n", CephClusterNamespace, "deploy", RgwDeployName,
@@ -659,7 +661,7 @@ func ResumeObjectStorage(ctx SpecContext) {
 
 	By("waiting for the RGW pods to be ready")
 	Eventually(ctx, func(g Gomega) {
-		pods, err := GetPodList(SecondaryK8sCluster, CephClusterNamespace)
+		pods, err := GetPodList(context.Background(), SecondaryK8sCluster, CephClusterNamespace)
 		g.Expect(err).NotTo(HaveOccurred())
 		index := slices.IndexFunc(pods.Items, func(pod corev1.Pod) bool {
 			return strings.HasPrefix(pod.GetName(), RgwDeployName)
@@ -682,6 +684,7 @@ func PauseObjectStorage(ctx SpecContext) {
 	GinkgoHelper()
 	By("pausing the object storage")
 	_, _, err := Kubectl(
+		context.Background(),
 		SecondaryK8sCluster,
 		nil,
 		"patch",
@@ -714,7 +717,7 @@ func PauseObjectStorage(ctx SpecContext) {
 
 	By("waiting for the RGW pods to be terminated")
 	Eventually(ctx, func(g Gomega) {
-		pods, err := GetPodList(SecondaryK8sCluster, CephClusterNamespace)
+		pods, err := GetPodList(context.Background(), SecondaryK8sCluster, CephClusterNamespace)
 		g.Expect(err).NotTo(HaveOccurred())
 		exist := slices.ContainsFunc(pods.Items, func(pod corev1.Pod) bool {
 			return strings.HasPrefix(pod.GetName(), RgwDeployName)
@@ -724,11 +727,11 @@ func PauseObjectStorage(ctx SpecContext) {
 }
 
 func ListRBDSnapshotsInPVC(cluster int, namespace, pvcName string) ([]ceph.RBDSnapshot, error) {
-	pvc, err := GetPVC(cluster, namespace, pvcName)
+	pvc, err := GetPVC(context.Background(), cluster, namespace, pvcName)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get PVC: %w", err)
 	}
-	pv, err := GetPV(cluster, pvc.Spec.VolumeName)
+	pv, err := GetPV(context.Background(), cluster, pvc.Spec.VolumeName)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get PV: %w", err)
 	}
@@ -787,9 +790,9 @@ func WaitUploadJobCreated(ctx SpecContext, cluster int, namespace, backupName st
 	GinkgoHelper()
 	By("waiting for an upload job to be created")
 	Eventually(ctx, func(g Gomega) {
-		mb, err := GetMB(cluster, namespace, backupName)
+		mb, err := GetMB(context.Background(), cluster, namespace, backupName)
 		g.Expect(err).NotTo(HaveOccurred())
-		jobs, err := GetJobList(cluster, CephClusterNamespace)
+		jobs, err := GetJobList(context.Background(), cluster, CephClusterNamespace)
 		g.Expect(err).NotTo(HaveOccurred())
 		exist := slices.ContainsFunc(jobs.Items, func(job batchv1.Job) bool {
 			return job.GetName() == controller.MakeUploadJobName(mb, partNum)
@@ -800,7 +803,7 @@ func WaitUploadJobCreated(ctx SpecContext, cluster int, namespace, backupName st
 
 func CheckJobExist(clusterNo int, namespace, jobName string) bool {
 	GinkgoHelper()
-	jobs, err := GetJobList(clusterNo, namespace)
+	jobs, err := GetJobList(context.Background(), clusterNo, namespace)
 	Expect(err).NotTo(HaveOccurred())
 
 	return slices.ContainsFunc(jobs.Items, func(job batchv1.Job) bool {
@@ -818,7 +821,7 @@ func WaitComponentJobsDeleted(
 	GinkgoHelper()
 	By("waiting for jobs to be deleted")
 	Eventually(ctx, func(g Gomega) {
-		jobs, err := GetJobList(cluster, CephClusterNamespace)
+		jobs, err := GetJobList(context.Background(), cluster, CephClusterNamespace)
 		g.Expect(err).NotTo(HaveOccurred())
 		exist := slices.ContainsFunc(jobs.Items, func(job batchv1.Job) bool {
 			_, ok := controller.ExtractPartNumFromComponentJobName(componentPrefix, job.GetName(), backup)
@@ -833,7 +836,7 @@ func WaitJobDeleted(ctx SpecContext, cluster int, namespace, jobName string) {
 	GinkgoHelper()
 	By("waiting for a Job to be deleted")
 	Eventually(ctx, func(g Gomega) {
-		jobs, err := GetJobList(cluster, CephClusterNamespace)
+		jobs, err := GetJobList(context.Background(), cluster, CephClusterNamespace)
 		g.Expect(err).NotTo(HaveOccurred())
 		exist := slices.ContainsFunc(jobs.Items, func(job batchv1.Job) bool {
 			return job.GetName() == jobName
@@ -870,7 +873,7 @@ func WaitPVCDeleted(ctx SpecContext, cluster int, namespace, pvcName string) {
 	GinkgoHelper()
 	By("waiting for a PVC to be deleted")
 	Eventually(ctx, func(g Gomega) {
-		pvcs, err := GetPVCList(cluster, CephClusterNamespace)
+		pvcs, err := GetPVCList(context.Background(), cluster, CephClusterNamespace)
 		g.Expect(err).NotTo(HaveOccurred())
 		exist := slices.ContainsFunc(pvcs.Items, func(pvc corev1.PersistentVolumeClaim) bool {
 			return pvc.GetName() == pvcName
@@ -883,7 +886,7 @@ func WaitPVCsDeleted(ctx SpecContext, cluster int, namespace, pvcNamePrefix stri
 	GinkgoHelper()
 	By("waiting for PVCs to be deleted")
 	Eventually(ctx, func(g Gomega) {
-		pvcs, err := GetPVCList(cluster, CephClusterNamespace)
+		pvcs, err := GetPVCList(context.Background(), cluster, CephClusterNamespace)
 		g.Expect(err).NotTo(HaveOccurred())
 		exist := slices.ContainsFunc(pvcs.Items, func(pvc corev1.PersistentVolumeClaim) bool {
 			return strings.HasPrefix(pvc.GetName(), pvcNamePrefix)
@@ -915,7 +918,7 @@ func WaitPVDeleted(ctx SpecContext, cluster int, pvName string) {
 	GinkgoHelper()
 	By("waiting for a PV to be deleted")
 	Eventually(ctx, func(g Gomega) {
-		pvs, err := GetPVList(cluster)
+		pvs, err := GetPVList(context.Background(), cluster)
 		g.Expect(err).NotTo(HaveOccurred())
 		exist := slices.ContainsFunc(pvs.Items, func(pv corev1.PersistentVolume) bool {
 			return pv.GetName() == pvName
@@ -981,12 +984,12 @@ func WaitTemporaryResourcesDeleted(ctx SpecContext, primaryMB, secondaryMB *mant
 func DeleteMantleBackup(cluster int, namespace, backupName string) {
 	GinkgoHelper()
 	By("deleting MantleBackup")
-	stdout, stderr, err := Kubectl(cluster, nil, "delete", "-n", namespace, "mantlebackup", backupName, "--timeout=3m")
+	stdout, stderr, err := Kubectl(context.Background(), cluster, nil, "delete", "-n", namespace, "mantlebackup", backupName, "--timeout=3m")
 	Expect(err).NotTo(HaveOccurred(), "stdout: %s, stderr: %s", string(stdout), string(stderr))
 }
 
 func GetBackupTransferPartSize() (*resource.Quantity, error) {
-	deployMC, err := GetDeploy(PrimaryK8sCluster, CephClusterNamespace, MantleControllerDeployName)
+	deployMC, err := GetDeploy(context.Background(), PrimaryK8sCluster, CephClusterNamespace, MantleControllerDeployName)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get mantle-controller deploy: %w", err)
 	}
@@ -1037,7 +1040,7 @@ func GetNumberOfBackupParts(snapshotSize *resource.Quantity) (int, error) {
 func ChangeBackupTransferPartSize(size string) {
 	GinkgoHelper()
 
-	deployMC, err := GetDeploy(PrimaryK8sCluster, CephClusterNamespace, MantleControllerDeployName)
+	deployMC, err := GetDeploy(context.Background(), PrimaryK8sCluster, CephClusterNamespace, MantleControllerDeployName)
 	Expect(err).NotTo(HaveOccurred())
 
 	args := deployMC.Spec.Template.Spec.Containers[0].Args
@@ -1048,7 +1051,7 @@ func ChangeBackupTransferPartSize(size string) {
 	Expect(backupTransferPartSizeIndex).NotTo(Equal(-1))
 
 	_, _, err = Kubectl(
-		PrimaryK8sCluster, nil,
+		context.Background(), PrimaryK8sCluster, nil,
 		"patch", "deploy", "-n", CephClusterNamespace, MantleControllerDeployName, "--type=json",
 		fmt.Sprintf(
 			`-p=[{"op": "replace", "path": "/spec/template/spec/containers/0/args/%d", `+
@@ -1071,7 +1074,7 @@ func ChangeComponentJobScript(
 ) {
 	GinkgoHelper()
 
-	deployMC, err := GetDeploy(cluster, CephClusterNamespace, MantleControllerDeployName)
+	deployMC, err := GetDeploy(context.Background(), cluster, CephClusterNamespace, MantleControllerDeployName)
 	Expect(err).NotTo(HaveOccurred())
 
 	env := deployMC.Spec.Template.Spec.Containers[0].Env
@@ -1124,7 +1127,7 @@ func ChangeComponentJobScript(
 
 	By("patching the controller manifest for " + envName)
 	_, _, err = Kubectl(
-		cluster, nil,
+		context.Background(), cluster, nil,
 		"patch", "deploy", "-n", CephClusterNamespace, MantleControllerDeployName, "--type=json",
 		fmt.Sprintf("--patch=%s", marshalledPatch),
 	)
@@ -1132,7 +1135,7 @@ func ChangeComponentJobScript(
 
 	By("waiting until the controller Pod starts running")
 	Eventually(ctx, func(g Gomega) {
-		stdout, _, err := Kubectl(cluster, nil, "get", "pod", "-n", CephClusterNamespace, "-o", "json")
+		stdout, _, err := Kubectl(context.Background(), cluster, nil, "get", "pod", "-n", CephClusterNamespace, "-o", "json")
 		g.Expect(err).NotTo(HaveOccurred())
 		var pods corev1.PodList
 		err = json.Unmarshal(stdout, &pods)
@@ -1213,7 +1216,7 @@ func WaitControllerLog(ctx SpecContext, clusterNo int, pattern string, duration 
 
 func CountMantleControllerPods(cluster int) int {
 	GinkgoHelper()
-	pods, err := GetPodList(cluster, CephClusterNamespace)
+	pods, err := GetPodList(context.Background(), cluster, CephClusterNamespace)
 	Expect(err).NotTo(HaveOccurred())
 	count := 0
 	for _, pod := range pods.Items {

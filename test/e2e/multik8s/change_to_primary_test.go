@@ -1,6 +1,8 @@
 package multik8s
 
 import (
+	"context"
+
 	"github.com/cybozu-go/mantle/internal/controller"
 	. "github.com/cybozu-go/mantle/test/e2e/multik8s/testutil"
 	"github.com/cybozu-go/mantle/test/util"
@@ -32,7 +34,7 @@ var _ = Describe("change role from primary to standalone during full backup", La
 
 		By("checking the MantleBackup in the primary K8s cluster remains")
 		Consistently(ctx, func(g Gomega) {
-			_, err := GetMB(PrimaryK8sCluster, namespace, backupName)
+			_, err := GetMB(context.Background(), PrimaryK8sCluster, namespace, backupName)
 			g.Expect(err).NotTo(HaveOccurred())
 		}, "10s", "1s").Should(Succeed())
 

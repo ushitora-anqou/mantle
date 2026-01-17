@@ -1,6 +1,8 @@
 package multik8s
 
 import (
+	"context"
+
 	. "github.com/cybozu-go/mantle/test/e2e/multik8s/testutil"
 	"github.com/cybozu-go/mantle/test/util"
 	. "github.com/onsi/ginkgo/v2"
@@ -27,9 +29,9 @@ var _ = Describe("backup failure", Label("backup-failure"), func() {
 		// Wait until an upload Job is created.
 		WaitUploadJobCreated(ctx, PrimaryK8sCluster, namespace, backupName, 0)
 
-		primaryMB, err := GetMB(PrimaryK8sCluster, namespace, backupName)
+		primaryMB, err := GetMB(context.Background(), PrimaryK8sCluster, namespace, backupName)
 		Expect(err).NotTo(HaveOccurred())
-		secondaryMB, err := GetMB(SecondaryK8sCluster, namespace, backupName)
+		secondaryMB, err := GetMB(context.Background(), SecondaryK8sCluster, namespace, backupName)
 		Expect(err).NotTo(HaveOccurred())
 
 		// Delete M0.
@@ -68,9 +70,9 @@ var _ = Describe("backup failure", Label("backup-failure"), func() {
 		// Wait until an upload Job is created.
 		WaitUploadJobCreated(ctx, PrimaryK8sCluster, namespace, backupName, 0)
 
-		primaryMB, err := GetMB(PrimaryK8sCluster, namespace, backupName)
+		primaryMB, err := GetMB(context.Background(), PrimaryK8sCluster, namespace, backupName)
 		Expect(err).NotTo(HaveOccurred())
-		secondaryMB0, err := GetMB(SecondaryK8sCluster, namespace, backupName)
+		secondaryMB0, err := GetMB(context.Background(), SecondaryK8sCluster, namespace, backupName)
 		Expect(err).NotTo(HaveOccurred())
 
 		// Delete M0'.
@@ -91,7 +93,7 @@ var _ = Describe("backup failure", Label("backup-failure"), func() {
 		EnsureCorrectRestoration(SecondaryK8sCluster, ctx, namespace, backupName, restoreName, writtenDataHash)
 
 		// Make sure all unnecessary resources are removed.
-		secondaryMB1, err := GetMB(SecondaryK8sCluster, namespace, backupName)
+		secondaryMB1, err := GetMB(context.Background(), SecondaryK8sCluster, namespace, backupName)
 		Expect(err).NotTo(HaveOccurred())
 		WaitTemporaryResourcesDeleted(ctx, primaryMB, secondaryMB0)
 		WaitTemporaryResourcesDeleted(ctx, primaryMB, secondaryMB1)
@@ -125,9 +127,9 @@ var _ = Describe("backup failure", Label("backup-failure"), func() {
 			// Wait until an upload Job is created.
 			WaitUploadJobCreated(ctx, PrimaryK8sCluster, namespace, backupName1, 0)
 
-			primaryMB, err := GetMB(PrimaryK8sCluster, namespace, backupName1)
+			primaryMB, err := GetMB(context.Background(), PrimaryK8sCluster, namespace, backupName1)
 			Expect(err).NotTo(HaveOccurred())
-			secondaryMB, err := GetMB(SecondaryK8sCluster, namespace, backupName1)
+			secondaryMB, err := GetMB(context.Background(), SecondaryK8sCluster, namespace, backupName1)
 			Expect(err).NotTo(HaveOccurred())
 
 			// Delete MantleBackup M1.
@@ -177,9 +179,9 @@ var _ = Describe("backup failure", Label("backup-failure"), func() {
 			// Wait until an upload Job is created.
 			WaitUploadJobCreated(ctx, PrimaryK8sCluster, namespace, backupName1, 0)
 
-			primaryMB1, err := GetMB(PrimaryK8sCluster, namespace, backupName1)
+			primaryMB1, err := GetMB(context.Background(), PrimaryK8sCluster, namespace, backupName1)
 			Expect(err).NotTo(HaveOccurred())
-			secondaryMB10, err := GetMB(SecondaryK8sCluster, namespace, backupName1)
+			secondaryMB10, err := GetMB(context.Background(), SecondaryK8sCluster, namespace, backupName1)
 			Expect(err).NotTo(HaveOccurred())
 
 			// Delete MantleBackup M1'.
@@ -202,7 +204,7 @@ var _ = Describe("backup failure", Label("backup-failure"), func() {
 			EnsureCorrectRestoration(SecondaryK8sCluster, ctx, namespace, backupName1, restoreName1, writtenDataHash1)
 
 			// Make sure all unnecessary resources are removed.
-			secondaryMB11, err := GetMB(SecondaryK8sCluster, namespace, backupName1)
+			secondaryMB11, err := GetMB(context.Background(), SecondaryK8sCluster, namespace, backupName1)
 			Expect(err).NotTo(HaveOccurred())
 			WaitTemporaryResourcesDeleted(ctx, primaryMB1, secondaryMB10)
 			WaitTemporaryResourcesDeleted(ctx, primaryMB1, secondaryMB11)

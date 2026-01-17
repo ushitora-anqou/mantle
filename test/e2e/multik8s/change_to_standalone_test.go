@@ -1,6 +1,7 @@
 package multik8s
 
 import (
+	"context"
 	"encoding/json"
 
 	mantlev1 "github.com/cybozu-go/mantle/api/v1"
@@ -36,12 +37,12 @@ var _ = Describe("change to standalone", Label("change-to-standalone"), func() {
 
 	It("should delete MantleBackup created by primary mantle from standalone mantle", func(ctx SpecContext) {
 		By("deleting the MantleBackup in the primary cluster")
-		_, _, err := Kubectl(PrimaryK8sCluster, nil, "delete", "mb", "-n", namespace, backupName, "--wait=false")
+		_, _, err := Kubectl(context.Background(), PrimaryK8sCluster, nil, "delete", "mb", "-n", namespace, backupName, "--wait=false")
 		Expect(err).NotTo(HaveOccurred())
 
 		By("checking that the MantleBackup is actually deleted")
 		Eventually(ctx, func(g Gomega) {
-			stdout, _, err := Kubectl(PrimaryK8sCluster, nil, "get", "mb", "-n", namespace, "-o", "json")
+			stdout, _, err := Kubectl(context.Background(), PrimaryK8sCluster, nil, "get", "mb", "-n", namespace, "-o", "json")
 			g.Expect(err).NotTo(HaveOccurred())
 			var mbs mantlev1.MantleBackupList
 			err = json.Unmarshal(stdout, &mbs)
@@ -58,12 +59,12 @@ var _ = Describe("change to standalone", Label("change-to-standalone"), func() {
 
 	It("should NOT delete MantleBackup created by secondary mantle from standalone mantle", func(ctx SpecContext) {
 		By("deleting the MantleBackup in the secondary cluster")
-		_, _, err := Kubectl(SecondaryK8sCluster, nil, "delete", "mb", "-n", namespace, backupName, "--wait=false")
+		_, _, err := Kubectl(context.Background(), SecondaryK8sCluster, nil, "delete", "mb", "-n", namespace, backupName, "--wait=false")
 		Expect(err).NotTo(HaveOccurred())
 
 		By("checking that the MantleBackup is NOT deleted")
 		Consistently(ctx, func(g Gomega) {
-			stdout, _, err := Kubectl(SecondaryK8sCluster, nil, "get", "mb", "-n", namespace, "-o", "json")
+			stdout, _, err := Kubectl(context.Background(), SecondaryK8sCluster, nil, "get", "mb", "-n", namespace, "-o", "json")
 			g.Expect(err).NotTo(HaveOccurred())
 			var mbs mantlev1.MantleBackupList
 			err = json.Unmarshal(stdout, &mbs)

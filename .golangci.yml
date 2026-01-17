@@ -17,7 +17,6 @@ linters:
         - github.com/onsi/ginkgo/v2
   default: all
   disable:
-    - contextcheck
     - cyclop
     - depguard
     - err113
@@ -27,7 +26,6 @@ linters:
     - gochecknoglobals
     - gochecknoinits
     - gocognit
-    - gocritic
     - godoclint
     - godox
     - gosec

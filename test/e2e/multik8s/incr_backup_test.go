@@ -1,6 +1,7 @@
 package multik8s
 
 import (
+	"context"
 	"slices"
 
 	mantlev1 "github.com/cybozu-go/mantle/api/v1"
@@ -27,9 +28,9 @@ var _ = Describe("incremental backup", Label("incr-backup"), func() {
 		CreateMantleBackup(PrimaryK8sCluster, namespace, pvcName, backupName0)
 		WaitMantleBackupSynced(namespace, backupName0)
 
-		primaryMB0, err := GetMB(PrimaryK8sCluster, namespace, backupName0)
+		primaryMB0, err := GetMB(context.Background(), PrimaryK8sCluster, namespace, backupName0)
 		Expect(err).NotTo(HaveOccurred())
-		secondaryMB0, err := GetMB(SecondaryK8sCluster, namespace, backupName0)
+		secondaryMB0, err := GetMB(context.Background(), SecondaryK8sCluster, namespace, backupName0)
 		Expect(err).NotTo(HaveOccurred())
 		WaitTemporaryResourcesDeleted(ctx, primaryMB0, secondaryMB0)
 
@@ -38,9 +39,9 @@ var _ = Describe("incremental backup", Label("incr-backup"), func() {
 		CreateMantleBackup(PrimaryK8sCluster, namespace, pvcName, backupName1)
 		WaitMantleBackupSynced(namespace, backupName1)
 
-		primaryMB1, err := GetMB(PrimaryK8sCluster, namespace, backupName1)
+		primaryMB1, err := GetMB(context.Background(), PrimaryK8sCluster, namespace, backupName1)
 		Expect(err).NotTo(HaveOccurred())
-		secondaryMB1, err := GetMB(SecondaryK8sCluster, namespace, backupName1)
+		secondaryMB1, err := GetMB(context.Background(), SecondaryK8sCluster, namespace, backupName1)
 		Expect(err).NotTo(HaveOccurred())
 		WaitTemporaryResourcesDeleted(ctx, primaryMB1, secondaryMB1)
 
@@ -83,7 +84,7 @@ var _ = Describe("incremental backup", Label("incr-backup"), func() {
 		WaitMantleBackupSynced(namespace, backupName1)
 
 		// remove M1'.
-		_, _, err := Kubectl(SecondaryK8sCluster, nil, "delete", "mb", "-n", namespace, backupName1)
+		_, _, err := Kubectl(context.Background(), SecondaryK8sCluster, nil, "delete", "mb", "-n", namespace, backupName1)
 		Expect(err).NotTo(HaveOccurred())
 
 		// create M2.
@@ -91,9 +92,9 @@ var _ = Describe("incremental backup", Label("incr-backup"), func() {
 		CreateMantleBackup(PrimaryK8sCluster, namespace, pvcName, backupName2)
 		WaitMantleBackupSynced(namespace, backupName2)
 
-		primaryMB2, err := GetMB(PrimaryK8sCluster, namespace, backupName2)
+		primaryMB2, err := GetMB(context.Background(), PrimaryK8sCluster, namespace, backupName2)
 		Expect(err).NotTo(HaveOccurred())
-		secondaryMB2, err := GetMB(SecondaryK8sCluster, namespace, backupName2)
+		secondaryMB2, err := GetMB(context.Background(), SecondaryK8sCluster, namespace, backupName2)
 		Expect(err).NotTo(HaveOccurred())
 		WaitTemporaryResourcesDeleted(ctx, primaryMB2, secondaryMB2)
 
@@ -116,7 +117,7 @@ var _ = Describe("incremental backup", Label("incr-backup"), func() {
 		EnsureCorrectRestoration(SecondaryK8sCluster, ctx, namespace, backupName0, restoreName0, writtenDataHash0)
 
 		// Make sure M1' isn't re-created.
-		mbList, err := GetObjectList[mantlev1.MantleBackupList](SecondaryK8sCluster, "mb", namespace)
+		mbList, err := GetObjectList[mantlev1.MantleBackupList](context.Background(), SecondaryK8sCluster, "mb", namespace)
 		Expect(err).NotTo(HaveOccurred())
 		Expect(slices.ContainsFunc(mbList.Items, func(mb mantlev1.MantleBackup) bool {
 			return mb.GetName() == backupName1
@@ -147,7 +148,7 @@ var _ = Describe("incremental backup", Label("incr-backup"), func() {
 		WaitMantleBackupSynced(namespace, backupName1)
 
 		// remove M1.
-		_, _, err := Kubectl(PrimaryK8sCluster, nil, "delete", "mb", "-n", namespace, backupName1)
+		_, _, err := Kubectl(context.Background(), PrimaryK8sCluster, nil, "delete", "mb", "-n", namespace, backupName1)
 		Expect(err).NotTo(HaveOccurred())
 
 		// create M2.
@@ -155,9 +156,9 @@ var _ = Describe("incremental backup", Label("incr-backup"), func() {
 		CreateMantleBackup(PrimaryK8sCluster, namespace, pvcName, backupName2)
 		WaitMantleBackupSynced(namespace, backupName2)
 
-		primaryMB2, err := GetMB(PrimaryK8sCluster, namespace, backupName2)
+		primaryMB2, err := GetMB(context.Background(), PrimaryK8sCluster, namespace, backupName2)
 		Expect(err).NotTo(HaveOccurred())
-		secondaryMB2, err := GetMB(SecondaryK8sCluster, namespace, backupName2)
+		secondaryMB2, err := GetMB(context.Background(), SecondaryK8sCluster, namespace, backupName2)
 		Expect(err).NotTo(HaveOccurred())
 		WaitTemporaryResourcesDeleted(ctx, primaryMB2, secondaryMB2)
 

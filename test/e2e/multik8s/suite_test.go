@@ -1,6 +1,7 @@
 package multik8s
 
 import (
+	"context"
 	"os"
 	"testing"
 	"time"
@@ -27,10 +28,10 @@ func TestMtest(t *testing.T) {
 var _ = BeforeSuite(func() {
 	By("waiting for mantle-controller to be ready", func() {
 		Eventually(func() error {
-			return CheckDeploymentReady(PrimaryK8sCluster, CephClusterNamespace, "mantle-controller")
+			return CheckDeploymentReady(context.Background(), PrimaryK8sCluster, CephClusterNamespace, "mantle-controller")
 		}).Should(Succeed())
 		Eventually(func() error {
-			return CheckDeploymentReady(SecondaryK8sCluster, CephClusterNamespace, "mantle-controller")
+			return CheckDeploymentReady(context.Background(), SecondaryK8sCluster, CephClusterNamespace, "mantle-controller")
 		}).Should(Succeed())
 	})
 })

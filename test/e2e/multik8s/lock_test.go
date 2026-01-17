@@ -1,6 +1,7 @@
 package multik8s
 
 import (
+	"context"
 	"encoding/json"
 	"time"
 
@@ -30,12 +31,12 @@ var _ = Describe("Locking", Label("lock"), func() {
 		CreateMantleBackup(PrimaryK8sCluster, namespace, pvcName, backupName0)
 		WaitMantleBackupSynced(namespace, backupName0)
 		var err error
-		controllerPod, err = GetControllerPodName(SecondaryK8sCluster)
+		controllerPod, err = GetControllerPodName(context.Background(), SecondaryK8sCluster)
 		Expect(err).NotTo(HaveOccurred())
 	})
 
 	It("should lock the volume in the secondary cluster", func() {
-		mb0, err := GetMB(SecondaryK8sCluster, namespace, backupName0)
+		mb0, err := GetMB(context.Background(), SecondaryK8sCluster, namespace, backupName0)
 		Expect(err).NotTo(HaveOccurred())
 
 		pvStored := corev1.PersistentVolume{}
@@ -45,7 +46,7 @@ var _ = Describe("Locking", Label("lock"), func() {
 		imageName = pvStored.Spec.CSI.VolumeAttributes["imageName"]
 
 		// locked
-		_, _, err = Kubectl(SecondaryK8sCluster, nil, "exec", "-n", CephClusterNamespace, controllerPod, "--",
+		_, _, err = Kubectl(context.Background(), SecondaryK8sCluster, nil, "exec", "-n", CephClusterNamespace, controllerPod, "--",
 			"rbd", "-p", poolName, "lock", "add", imageName, dummyLockID)
 		Expect(err).NotTo(HaveOccurred())
 	})
@@ -55,7 +56,7 @@ var _ = Describe("Locking", Label("lock"), func() {
 		var mb1 *mantlev1.MantleBackup
 		Eventually(func() error {
 			var err error
-			mb1, err = GetMB(SecondaryK8sCluster, namespace, backupName1)
+			mb1, err = GetMB(context.Background(), SecondaryK8sCluster, namespace, backupName1)
 
 			return err
 		}).Should(Succeed())
@@ -67,7 +68,7 @@ var _ = Describe("Locking", Label("lock"), func() {
 	})
 
 	It("checks that the jobs are not created", func(ctx SpecContext) {
-		mb1, err := GetMB(SecondaryK8sCluster, namespace, backupName1)
+		mb1, err := GetMB(context.Background(), SecondaryK8sCluster, namespace, backupName1)
 		Expect(err).NotTo(HaveOccurred())
 		Expect(
 			CheckJobExist(SecondaryK8sCluster, CephClusterNamespace, controller.MantleZeroOutJobPrefix+string(mb1.GetUID())),
@@ -78,7 +79,7 @@ var _ = Describe("Locking", Label("lock"), func() {
 	})
 
 	It("should unlock the volume in the secondary cluster", func() {
-		stdout, _, err := Kubectl(SecondaryK8sCluster, nil, "exec", "-n", CephClusterNamespace, controllerPod, "--",
+		stdout, _, err := Kubectl(context.Background(), SecondaryK8sCluster, nil, "exec", "-n", CephClusterNamespace, controllerPod, "--",
 			"rbd", "-p", poolName, "--format", "json", "lock", "ls", imageName)
 		Expect(err).NotTo(HaveOccurred())
 		var locks []*ceph.RBDLock
@@ -87,7 +88,7 @@ var _ = Describe("Locking", Label("lock"), func() {
 		Expect(locks).To(HaveLen(1))
 
 		// unlock
-		_, _, err = Kubectl(SecondaryK8sCluster, nil, "exec", "-n", CephClusterNamespace, controllerPod, "--",
+		_, _, err = Kubectl(context.Background(), SecondaryK8sCluster, nil, "exec", "-n", CephClusterNamespace, controllerPod, "--",
 			"rbd", "-p", poolName, "lock", "rm", imageName, dummyLockID, locks[0].Locker)
 		Expect(err).NotTo(HaveOccurred())
 	})
@@ -98,7 +99,7 @@ var _ = Describe("Locking", Label("lock"), func() {
 
 	It("should not exist locks after backup completion", func() {
 		Eventually(func(g Gomega) {
-			stdout, _, err := Kubectl(SecondaryK8sCluster, nil, "exec", "-n", CephClusterNamespace, controllerPod, "--",
+			stdout, _, err := Kubectl(context.Background(), SecondaryK8sCluster, nil, "exec", "-n", CephClusterNamespace, controllerPod, "--",
 				"rbd", "-p", poolName, "--format", "json", "lock", "ls", imageName)
 			g.Expect(err).NotTo(HaveOccurred())
 			var locks []*ceph.RBDLock

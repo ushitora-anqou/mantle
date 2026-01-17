@@ -2301,7 +2301,7 @@ func (r *MantleBackupReconciler) createStaticPVIfNotExists(
 	feature := basePV.Spec.CSI.VolumeAttributes["imageFeatures"]
 	if addFlatten {
 		if len(feature) > 0 {
-			feature = feature + ",deep-flatten"
+			feature += ",deep-flatten"
 		} else {
 			feature = "deep-flatten"
 		}

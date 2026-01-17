@@ -1,6 +1,7 @@
 package multik8s
 
 import (
+	"context"
 	"slices"
 
 	. "github.com/cybozu-go/mantle/test/e2e/multik8s/testutil"
@@ -32,7 +33,7 @@ var _ = Describe("webhook independence test", func() {
 
 		By("waiting for PVC with remote-uid annotation to be created on secondary cluster")
 		Eventually(ctx, func(g Gomega) {
-			pvc, err := GetPVC(SecondaryK8sCluster, namespace, pvcName)
+			pvc, err := GetPVC(context.Background(), SecondaryK8sCluster, namespace, pvcName)
 			g.Expect(err).NotTo(HaveOccurred())
 			g.Expect(pvc.Annotations).NotTo(BeNil())
 			g.Expect(pvc.Annotations[annotRemoteUID]).NotTo(BeEmpty())
@@ -41,7 +42,7 @@ var _ = Describe("webhook independence test", func() {
 
 		By("scaling down the controller deployment to 0 on secondary cluster")
 		Expect(CountMantleControllerPods(SecondaryK8sCluster)).To(Equal(1))
-		_, stderr, err := Kubectl(SecondaryK8sCluster, nil,
+		_, stderr, err := Kubectl(context.Background(), SecondaryK8sCluster, nil,
 			"scale", "deploy", "-n", CephClusterNamespace, "mantle-controller", "--replicas=0")
 		Expect(err).NotTo(HaveOccurred(), string(stderr))
 
@@ -53,7 +54,7 @@ var _ = Describe("webhook independence test", func() {
 
 		By("checking the webhook deployment is still available on secondary cluster")
 		Eventually(ctx, func(g Gomega) {
-			err := CheckDeploymentReady(SecondaryK8sCluster, CephClusterNamespace, "mantle-webhook")
+			err := CheckDeploymentReady(context.Background(), SecondaryK8sCluster, CephClusterNamespace, "mantle-webhook")
 			g.Expect(err).NotTo(HaveOccurred())
 		}).Should(Succeed())
 
@@ -62,7 +63,7 @@ var _ = Describe("webhook independence test", func() {
 
 		By("verifying the Pod fails to attach the volume due to webhook rejection")
 		Eventually(ctx, func(g Gomega) {
-			eventList, err := GetEventList(SecondaryK8sCluster, namespace)
+			eventList, err := GetEventList(context.Background(), SecondaryK8sCluster, namespace)
 			g.Expect(err).NotTo(HaveOccurred())
 			found := false
 			for _, event := range eventList.Items {
@@ -83,7 +84,7 @@ var _ = Describe("webhook independence test", func() {
 			CreatePVC(ctx, SecondaryK8sCluster, namespace, pvcName)
 			CreatePod(SecondaryK8sCluster, namespace, podName, pvcName)
 			Eventually(ctx, func(g Gomega) {
-				pods, err := GetPodList(SecondaryK8sCluster, namespace)
+				pods, err := GetPodList(context.Background(), SecondaryK8sCluster, namespace)
 				g.Expect(err).NotTo(HaveOccurred())
 				i := slices.IndexFunc(pods.Items, func(p corev1.Pod) bool {
 					return p.Name == podName
@@ -94,13 +95,13 @@ var _ = Describe("webhook independence test", func() {
 		})
 
 		By("scaling the controller deployment back to 1 replica on secondary cluster")
-		_, stderr, err = Kubectl(SecondaryK8sCluster, nil,
+		_, stderr, err = Kubectl(context.Background(), SecondaryK8sCluster, nil,
 			"scale", "deploy", "-n", CephClusterNamespace, "mantle-controller", "--replicas=1")
 		Expect(err).NotTo(HaveOccurred(), string(stderr))
 
 		By("waiting for the controller deployment to be ready")
 		Eventually(ctx, func(g Gomega) {
-			err := CheckDeploymentReady(SecondaryK8sCluster, CephClusterNamespace, "mantle-controller")
+			err := CheckDeploymentReady(context.Background(), SecondaryK8sCluster, CephClusterNamespace, "mantle-controller")
 			g.Expect(err).NotTo(HaveOccurred())
 		}).Should(Succeed())
 	})

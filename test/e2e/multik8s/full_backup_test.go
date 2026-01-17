@@ -1,6 +1,7 @@
 package multik8s
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"reflect"
@@ -36,16 +37,16 @@ var _ = Describe("full backup", Label("full-backup"), func() {
 
 			By("checking PVC is replicated")
 			Eventually(func() error {
-				primaryPVC, err := GetPVC(PrimaryK8sCluster, namespace, pvcName)
+				primaryPVC, err := GetPVC(context.Background(), PrimaryK8sCluster, namespace, pvcName)
 				if err != nil {
 					return err
 				}
-				primaryMB, err := GetMB(PrimaryK8sCluster, namespace, backupName)
+				primaryMB, err := GetMB(context.Background(), PrimaryK8sCluster, namespace, backupName)
 				if err != nil {
 					return err
 				}
 
-				pvc, err := GetPVC(SecondaryK8sCluster, namespace, pvcName)
+				pvc, err := GetPVC(context.Background(), SecondaryK8sCluster, namespace, pvcName)
 				if err != nil {
 					return err
 				}
@@ -77,20 +78,20 @@ var _ = Describe("full backup", Label("full-backup"), func() {
 			By("checking MantleBackup is replicated")
 			var primaryMB, secondaryMB *mantlev1.MantleBackup
 			Eventually(func() error {
-				primaryPVC, err := GetPVC(PrimaryK8sCluster, namespace, pvcName)
+				primaryPVC, err := GetPVC(context.Background(), PrimaryK8sCluster, namespace, pvcName)
 				if err != nil {
 					return err
 				}
-				secondaryPVC, err := GetPVC(SecondaryK8sCluster, namespace, pvcName)
+				secondaryPVC, err := GetPVC(context.Background(), SecondaryK8sCluster, namespace, pvcName)
 				if err != nil {
 					return err
 				}
-				primaryMB, err = GetMB(PrimaryK8sCluster, namespace, backupName)
+				primaryMB, err = GetMB(context.Background(), PrimaryK8sCluster, namespace, backupName)
 				if err != nil {
 					return err
 				}
 
-				secondaryMB, err = GetMB(SecondaryK8sCluster, namespace, backupName)
+				secondaryMB, err = GetMB(context.Background(), SecondaryK8sCluster, namespace, backupName)
 				if err != nil {
 					return err
 				}
@@ -148,7 +149,7 @@ var _ = Describe("full backup", Label("full-backup"), func() {
 			By("ensuring the PVC can be attached to the pod in the primary cluster")
 			CreatePod(PrimaryK8sCluster, namespace, podName, pvcName)
 			Eventually(func() error {
-				pods, err := GetPodList(PrimaryK8sCluster, namespace)
+				pods, err := GetPodList(context.Background(), PrimaryK8sCluster, namespace)
 				if err != nil {
 					return err
 				}
@@ -164,7 +165,7 @@ var _ = Describe("full backup", Label("full-backup"), func() {
 			By("ensuring the PVC can not be attached to any pods in the secondary cluster")
 			CreatePod(SecondaryK8sCluster, namespace, podName, pvcName)
 			Eventually(func() error {
-				eventList, err := GetEventList(SecondaryK8sCluster, namespace)
+				eventList, err := GetEventList(context.Background(), SecondaryK8sCluster, namespace)
 				if err != nil {
 					return err
 				}
@@ -203,7 +204,7 @@ var _ = Describe("full backup", Label("full-backup"), func() {
 		WaitMantleBackupSynced(namespace, backupName0)
 
 		// remove M0'.
-		_, _, err := Kubectl(SecondaryK8sCluster, nil, "delete", "mb", "-n", namespace, backupName0)
+		_, _, err := Kubectl(context.Background(), SecondaryK8sCluster, nil, "delete", "mb", "-n", namespace, backupName0)
 		Expect(err).NotTo(HaveOccurred())
 
 		// create M1.
@@ -211,9 +212,9 @@ var _ = Describe("full backup", Label("full-backup"), func() {
 		CreateMantleBackup(PrimaryK8sCluster, namespace, pvcName, backupName1)
 		WaitMantleBackupSynced(namespace, backupName1)
 
-		primaryMB1, err := GetMB(PrimaryK8sCluster, namespace, backupName1)
+		primaryMB1, err := GetMB(context.Background(), PrimaryK8sCluster, namespace, backupName1)
 		Expect(err).NotTo(HaveOccurred())
-		secondaryMB1, err := GetMB(SecondaryK8sCluster, namespace, backupName1)
+		secondaryMB1, err := GetMB(context.Background(), SecondaryK8sCluster, namespace, backupName1)
 		Expect(err).NotTo(HaveOccurred())
 		WaitTemporaryResourcesDeleted(ctx, primaryMB1, secondaryMB1)
 
@@ -248,7 +249,7 @@ var _ = Describe("full backup", Label("full-backup"), func() {
 		WaitMantleBackupSynced(namespace, backupName0)
 
 		// remove M0.
-		_, _, err := Kubectl(PrimaryK8sCluster, nil, "delete", "mb", "-n", namespace, backupName0)
+		_, _, err := Kubectl(context.Background(), PrimaryK8sCluster, nil, "delete", "mb", "-n", namespace, backupName0)
 		Expect(err).NotTo(HaveOccurred())
 
 		// create M1.
@@ -256,9 +257,9 @@ var _ = Describe("full backup", Label("full-backup"), func() {
 		CreateMantleBackup(PrimaryK8sCluster, namespace, pvcName, backupName1)
 		WaitMantleBackupSynced(namespace, backupName1)
 
-		primaryMB1, err := GetMB(PrimaryK8sCluster, namespace, backupName1)
+		primaryMB1, err := GetMB(context.Background(), PrimaryK8sCluster, namespace, backupName1)
 		Expect(err).NotTo(HaveOccurred())
-		secondaryMB1, err := GetMB(SecondaryK8sCluster, namespace, backupName1)
+		secondaryMB1, err := GetMB(context.Background(), SecondaryK8sCluster, namespace, backupName1)
 		Expect(err).NotTo(HaveOccurred())
 		WaitTemporaryResourcesDeleted(ctx, primaryMB1, secondaryMB1)
 
@@ -291,21 +292,21 @@ var _ = Describe("full backup", Label("full-backup"), func() {
 
 		By("making sure that the MantleBackup has the Verified=False condition in both clusters", func() {
 			Eventually(func(g Gomega) {
-				primaryMB, err := GetMB(PrimaryK8sCluster, namespace, backupName)
+				primaryMB, err := GetMB(context.Background(), PrimaryK8sCluster, namespace, backupName)
 				g.Expect(err).NotTo(HaveOccurred())
 				g.Expect(primaryMB.IsVerifiedFalse()).To(BeTrue())
 			}).Should(Succeed())
 			Eventually(func(g Gomega) {
-				secondaryMB, err := GetMB(SecondaryK8sCluster, namespace, backupName)
+				secondaryMB, err := GetMB(context.Background(), SecondaryK8sCluster, namespace, backupName)
 				g.Expect(err).NotTo(HaveOccurred())
 				g.Expect(secondaryMB.IsVerifiedFalse()).To(BeTrue())
 			}).Should(Succeed())
 		})
 
 		By("making sure that no temporary resources remain", func() {
-			primaryMB1, err := GetMB(PrimaryK8sCluster, namespace, backupName)
+			primaryMB1, err := GetMB(context.Background(), PrimaryK8sCluster, namespace, backupName)
 			Expect(err).NotTo(HaveOccurred())
-			secondaryMB1, err := GetMB(SecondaryK8sCluster, namespace, backupName)
+			secondaryMB1, err := GetMB(context.Background(), SecondaryK8sCluster, namespace, backupName)
 			Expect(err).NotTo(HaveOccurred())
 			WaitTemporaryResourcesDeleted(ctx, primaryMB1, secondaryMB1)
 		})
@@ -317,27 +318,27 @@ var _ = Describe("full backup", Label("full-backup"), func() {
 
 			By(clusterName+": creating MantleRestore", func() {
 				Eventually(ctx, func() error {
-					return ApplyMantleRestoreTemplate(cluster, namespace, restoreName, backupName)
+					return ApplyMantleRestoreTemplate(context.Background(), cluster, namespace, restoreName, backupName)
 				}).Should(Succeed())
 			})
 
 			By(clusterName+": checking the MantleRestore won't be ready to use", func() {
 				Consistently(ctx, func(g Gomega) {
-					mr, err := GetMR(cluster, namespace, restoreName)
+					mr, err := GetMR(context.Background(), cluster, namespace, restoreName)
 					g.Expect(err).NotTo(HaveOccurred())
 					g.Expect(mr.IsReady()).To(BeFalse())
 				}, "10s").Should(Succeed())
 			})
 
 			By(clusterName+": attaching skip-verify annotation to the MantleBackup", func() {
-				_, _, err := Kubectl(cluster, nil, "annotate", "mb", "-n", namespace, backupName,
+				_, _, err := Kubectl(context.Background(), cluster, nil, "annotate", "mb", "-n", namespace, backupName,
 					"mantle.cybozu.io/skip-verify=true")
 				Expect(err).NotTo(HaveOccurred())
 			})
 
 			By(clusterName+": checking the MantleRestore becomes ready to use", func() {
 				Eventually(ctx, func(g Gomega) {
-					mr, err := GetMR(cluster, namespace, restoreName)
+					mr, err := GetMR(context.Background(), cluster, namespace, restoreName)
 					g.Expect(err).NotTo(HaveOccurred())
 					g.Expect(mr.IsReady()).To(BeTrue())
 				}).Should(Succeed())

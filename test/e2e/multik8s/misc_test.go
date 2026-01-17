@@ -1,6 +1,7 @@
 package multik8s
 
 import (
+	"context"
 	"fmt"
 	"strings"
 
@@ -30,9 +31,9 @@ var _ = Describe("metrics tests", func() {
 	DescribeTable("metrics should be exposed",
 		func(ctx SpecContext, metricName string) {
 			Eventually(ctx, func(g Gomega) {
-				controllerPod, err := GetControllerPodName(PrimaryK8sCluster)
+				controllerPod, err := GetControllerPodName(context.Background(), PrimaryK8sCluster)
 				g.Expect(err).NotTo(HaveOccurred())
-				stdout, _, err := Kubectl(PrimaryK8sCluster, nil, "exec", "-n", CephClusterNamespace, controllerPod, "--",
+				stdout, _, err := Kubectl(context.Background(), PrimaryK8sCluster, nil, "exec", "-n", CephClusterNamespace, controllerPod, "--",
 					"curl", "-s", "http://localhost:8080/metrics")
 				g.Expect(err).NotTo(HaveOccurred())
 				g.Expect(strings.Contains(string(stdout), metricName)).To(BeTrue())
@@ -67,7 +68,7 @@ var _ = Describe("miscellaneous tests", func() {
 		WaitUploadJobCreated(ctx, PrimaryK8sCluster, namespace, backupName, 0)
 
 		// Get the expected number of the backup parts before changing backup-transfer-part-size.
-		pvc, err := GetPVC(PrimaryK8sCluster, namespace, pvcName)
+		pvc, err := GetPVC(context.Background(), PrimaryK8sCluster, namespace, pvcName)
 		Expect(err).NotTo(HaveOccurred())
 		numParts, err := GetNumberOfBackupParts(pvc.Spec.Resources.Requests.Storage())
 		Expect(err).NotTo(HaveOccurred())
@@ -113,15 +114,15 @@ var _ = Describe("miscellaneous tests", func() {
 		WaitMantleBackupSynced(namespace, backupName1)
 		WaitMantleBackupSynced(namespace, backupName2)
 
-		primaryMB1, err := GetMB(PrimaryK8sCluster, namespace, backupName1)
+		primaryMB1, err := GetMB(context.Background(), PrimaryK8sCluster, namespace, backupName1)
 		Expect(err).NotTo(HaveOccurred())
-		secondaryMB1, err := GetMB(SecondaryK8sCluster, namespace, backupName1)
+		secondaryMB1, err := GetMB(context.Background(), SecondaryK8sCluster, namespace, backupName1)
 		Expect(err).NotTo(HaveOccurred())
 		WaitTemporaryResourcesDeleted(ctx, primaryMB1, secondaryMB1)
 
-		primaryMB2, err := GetMB(PrimaryK8sCluster, namespace, backupName2)
+		primaryMB2, err := GetMB(context.Background(), PrimaryK8sCluster, namespace, backupName2)
 		Expect(err).NotTo(HaveOccurred())
-		secondaryMB2, err := GetMB(SecondaryK8sCluster, namespace, backupName2)
+		secondaryMB2, err := GetMB(context.Background(), SecondaryK8sCluster, namespace, backupName2)
 		Expect(err).NotTo(HaveOccurred())
 		WaitTemporaryResourcesDeleted(ctx, primaryMB2, secondaryMB2)
 
@@ -183,16 +184,16 @@ s5cmd(){
 			By(fmt.Sprintf("waiting the situation where part=%d upload Job has not yet completed but "+
 				"part=%d upload Job has already completed", partNumSlow, partNumFast))
 			Eventually(ctx, func(g Gomega) {
-				primaryMB, err := GetMB(PrimaryK8sCluster, namespace, backupName)
+				primaryMB, err := GetMB(context.Background(), PrimaryK8sCluster, namespace, backupName)
 				g.Expect(err).NotTo(HaveOccurred())
 				g.Expect(primaryMB.IsSynced()).To(BeFalse())
 
-				jobSlow, err := GetJob(PrimaryK8sCluster, CephClusterNamespace,
+				jobSlow, err := GetJob(context.Background(), PrimaryK8sCluster, CephClusterNamespace,
 					controller.MakeUploadJobName(primaryMB, partNumSlow))
 				g.Expect(err).NotTo(HaveOccurred())
 				g.Expect(IsJobConditionTrue(jobSlow.Status.Conditions, batchv1.JobComplete)).To(BeFalse())
 
-				jobFast, err := GetJob(PrimaryK8sCluster, CephClusterNamespace,
+				jobFast, err := GetJob(context.Background(), PrimaryK8sCluster, CephClusterNamespace,
 					controller.MakeUploadJobName(primaryMB, partNumFast))
 				g.Expect(err).NotTo(HaveOccurred())
 				g.Expect(IsJobConditionTrue(jobFast.Status.Conditions, batchv1.JobComplete)).To(BeTrue())
@@ -200,9 +201,9 @@ s5cmd(){
 
 			WaitMantleBackupSynced(namespace, backupName)
 
-			primaryMB, err := GetMB(PrimaryK8sCluster, namespace, backupName)
+			primaryMB, err := GetMB(context.Background(), PrimaryK8sCluster, namespace, backupName)
 			Expect(err).NotTo(HaveOccurred())
-			secondaryMB, err := GetMB(SecondaryK8sCluster, namespace, backupName)
+			secondaryMB, err := GetMB(context.Background(), SecondaryK8sCluster, namespace, backupName)
 			Expect(err).NotTo(HaveOccurred())
 			WaitTemporaryResourcesDeleted(ctx, primaryMB, secondaryMB)
 
@@ -262,15 +263,15 @@ s5cmd(){
 			By("waiting for the part=1 Job to fail")
 			var backup *mantlev1.MantleBackup
 			Eventually(ctx, func(g Gomega) {
-				primaryMB, err := GetMB(PrimaryK8sCluster, namespace, backupName)
+				primaryMB, err := GetMB(context.Background(), PrimaryK8sCluster, namespace, backupName)
 				g.Expect(err).NotTo(HaveOccurred())
 				g.Expect(primaryMB.IsSynced()).To(BeFalse())
 
-				backup, err = GetMB(clusterOfJob, namespace, backupName)
+				backup, err = GetMB(context.Background(), clusterOfJob, namespace, backupName)
 				g.Expect(err).NotTo(HaveOccurred())
 				jobName := makeJobName(backup, partNumFailed)
 
-				job, err := GetJob(clusterOfJob, CephClusterNamespace, jobName)
+				job, err := GetJob(context.Background(), clusterOfJob, CephClusterNamespace, jobName)
 				g.Expect(err).NotTo(HaveOccurred())
 				g.Expect(IsJobConditionTrue(job.Status.Conditions, batchv1.JobComplete)).To(BeFalse())
 			}).Should(Succeed())
@@ -278,7 +279,7 @@ s5cmd(){
 			By("ensuring the part=1 Job continues to fail")
 			Consistently(ctx, func(g Gomega) {
 				jobName := makeJobName(backup, partNumFailed)
-				job, err := GetJob(clusterOfJob, CephClusterNamespace, jobName)
+				job, err := GetJob(context.Background(), clusterOfJob, CephClusterNamespace, jobName)
 				g.Expect(err).NotTo(HaveOccurred())
 				g.Expect(IsJobConditionTrue(job.Status.Conditions, batchv1.JobComplete)).To(BeFalse())
 			}, "10s", "1s").Should(Succeed())
@@ -287,7 +288,7 @@ s5cmd(){
 			switch howJobRevived {
 			case 0: // reset the Job script to the original one.
 				ChangeComponentJobScript(ctx, clusterOfJob, envName, namespace, backupName, partNumFailed, nil)
-				_, _, err := Kubectl(clusterOfJob, nil, "delete", "-n", CephClusterNamespace,
+				_, _, err := Kubectl(context.Background(), clusterOfJob, nil, "delete", "-n", CephClusterNamespace,
 					"job", makeJobName(backup, partNumFailed))
 				Expect(err).NotTo(HaveOccurred())
 
@@ -320,26 +321,26 @@ spec:
         persistentVolumeClaim:
           claimName: %s
 `, jobName, CephClusterNamespace, controller.MakeExportDataPVCName(backup, partNumFailed))
-				_, _, err := Kubectl(clusterOfJob, []byte(manifest), "apply", "-f", "-")
+				_, _, err := Kubectl(context.Background(), clusterOfJob, []byte(manifest), "apply", "-f", "-")
 				Expect(err).NotTo(HaveOccurred())
 
 				By("waiting for the Job to be completed")
 				Eventually(ctx, func(g Gomega) {
-					job, err := GetJob(clusterOfJob, CephClusterNamespace, jobName)
+					job, err := GetJob(context.Background(), clusterOfJob, CephClusterNamespace, jobName)
 					g.Expect(err).NotTo(HaveOccurred())
 					g.Expect(IsJobConditionTrue(job.Status.Conditions, batchv1.JobComplete)).To(BeTrue())
 				}).Should(Succeed())
 
 				By("deleting the Job")
-				_, _, err = Kubectl(clusterOfJob, nil, "delete", "-n", CephClusterNamespace, "job", jobName)
+				_, _, err = Kubectl(context.Background(), clusterOfJob, nil, "delete", "-n", CephClusterNamespace, "job", jobName)
 				Expect(err).NotTo(HaveOccurred())
 			}
 
 			WaitMantleBackupSynced(namespace, backupName)
 
-			primaryMB, err := GetMB(PrimaryK8sCluster, namespace, backupName)
+			primaryMB, err := GetMB(context.Background(), PrimaryK8sCluster, namespace, backupName)
 			Expect(err).NotTo(HaveOccurred())
-			secondaryMB, err := GetMB(SecondaryK8sCluster, namespace, backupName)
+			secondaryMB, err := GetMB(context.Background(), SecondaryK8sCluster, namespace, backupName)
 			Expect(err).NotTo(HaveOccurred())
 			WaitTemporaryResourcesDeleted(ctx, primaryMB, secondaryMB)
 
