@@ -33,7 +33,6 @@ linters:
     - ireturn
     - maintidx
     - mnd
-    - nestif
     - nilerr
     - nilnil
     - noctx

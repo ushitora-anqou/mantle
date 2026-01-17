@@ -94,24 +94,27 @@ func (r *MantleBackupConfigReconciler) Reconcile(ctx context.Context, req ctrl.R
 
 	// When the deletionTimestamp is set, remove the finalizer and finish reconciling.
 	if !mbc.DeletionTimestamp.IsZero() {
-		if controllerutil.ContainsFinalizer(&mbc, MantleBackupConfigFinalizerName) &&
-			mbc.Annotations[MantleBackupConfigAnnotationManagedClusterID] == r.managedCephClusterID {
-			_ = metrics.BackupConfigInfo.Delete(prometheus.Labels{
-				"persistentvolumeclaim": mbc.Spec.PVC,
-				"resource_namespace":    mbc.Namespace,
-				"mantlebackupconfig":    mbc.Name,
-			})
+		// Not managed by this controller
+		if !controllerutil.ContainsFinalizer(&mbc, MantleBackupConfigFinalizerName) ||
+			mbc.Annotations[MantleBackupConfigAnnotationManagedClusterID] != r.managedCephClusterID {
+			return ctrl.Result{}, nil
+		}
 
-			// Delete the CronJob. If we failed to delete it because it's not found, ignore the error.
-			logger.Info("start deleting cronjobs")
-			if err := r.deleteCronJob(ctx, &mbc, cronJobInfo.namespace); err != nil && !aerrors.IsNotFound(err) {
-				return ctrl.Result{}, fmt.Errorf("failed to delete cronjob: %w", err)
-			}
+		_ = metrics.BackupConfigInfo.Delete(prometheus.Labels{
+			"persistentvolumeclaim": mbc.Spec.PVC,
+			"resource_namespace":    mbc.Namespace,
+			"mantlebackupconfig":    mbc.Name,
+		})
 
-			controllerutil.RemoveFinalizer(&mbc, MantleBackupConfigFinalizerName)
-			if err := r.Client.Update(ctx, &mbc); err != nil {
-				return ctrl.Result{}, fmt.Errorf("failed to remove mbc finalizer: %w", err)
-			}
+		// Delete the CronJob. If we failed to delete it because it's not found, ignore the error.
+		logger.Info("start deleting cronjobs")
+		if err := r.deleteCronJob(ctx, &mbc, cronJobInfo.namespace); err != nil && !aerrors.IsNotFound(err) {
+			return ctrl.Result{}, fmt.Errorf("failed to delete cronjob: %w", err)
+		}
+
+		controllerutil.RemoveFinalizer(&mbc, MantleBackupConfigFinalizerName)
+		if err := r.Client.Update(ctx, &mbc); err != nil {
+			return ctrl.Result{}, fmt.Errorf("failed to remove mbc finalizer: %w", err)
 		}
 
 		return ctrl.Result{}, nil
