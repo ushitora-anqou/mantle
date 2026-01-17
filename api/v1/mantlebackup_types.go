@@ -90,7 +90,8 @@ type MantleBackup struct {
 type MantleBackupList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
-	Items           []MantleBackup `json:"items"`
+
+	Items []MantleBackup `json:"items"`
 }
 
 // IsSnapshotCaptured returns true if the snapshot has been captured.

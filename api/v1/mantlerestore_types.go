@@ -63,7 +63,8 @@ func (m *MantleRestore) IsReady() bool {
 type MantleRestoreList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
-	Items           []MantleRestore `json:"items"`
+
+	Items []MantleRestore `json:"items"`
 }
 
 func init() {

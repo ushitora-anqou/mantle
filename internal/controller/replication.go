@@ -33,8 +33,9 @@ type PrimarySettings struct {
 }
 
 type SecondaryServer struct {
-	client client.Client
 	proto.UnimplementedMantleServiceServer
+
+	client client.Client
 }
 
 var _ proto.MantleServiceServer = &SecondaryServer{}

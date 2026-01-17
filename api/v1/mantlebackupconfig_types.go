@@ -56,7 +56,8 @@ type MantleBackupConfig struct {
 type MantleBackupConfigList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
-	Items           []MantleBackupConfig `json:"items"`
+
+	Items []MantleBackupConfig `json:"items"`
 }
 
 func init() {

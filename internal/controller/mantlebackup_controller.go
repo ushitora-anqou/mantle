@@ -113,6 +113,7 @@ type ProxySettings struct {
 // MantleBackupReconciler reconciles a MantleBackup object.
 type MantleBackupReconciler struct {
 	client.Client
+
 	Scheme                 *runtime.Scheme
 	ceph                   ceph.CephCmd
 	managedCephClusterID   string
