@@ -2,6 +2,7 @@ package testutil
 
 import (
 	"context"
+	"sync"
 
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/rest"
@@ -20,10 +21,10 @@ type ManagerUtil interface {
 }
 
 type managerUtilImpl struct {
-	ctx    context.Context
-	cancel context.CancelFunc
-	mgr    manager.Manager
-	errCh  chan error
+	mgr      manager.Manager
+	errCh    chan error
+	stopCh   chan struct{}
+	stopOnce sync.Once
 }
 
 func NewManagerUtil(ctxRoot context.Context, restConfig *rest.Config, schema *runtime.Scheme) ManagerUtil {
@@ -37,26 +38,33 @@ func NewManagerUtil(ctxRoot context.Context, restConfig *rest.Config, schema *ru
 		panic(err)
 	}
 
-	ctx, cancel := context.WithCancel(ctxRoot)
-
 	return &managerUtilImpl{
-		ctx:    ctx,
-		cancel: cancel,
 		mgr:    mgr,
 		errCh:  make(chan error),
+		stopCh: make(chan struct{}),
 	}
 }
 
 // Start starts the manager in a goroutine.
 func (m *managerUtilImpl) Start() {
 	go func() {
-		m.errCh <- m.mgr.Start(m.ctx)
+		ctx, cancel := context.WithCancel(context.Background())
+		defer cancel()
+
+		go func() {
+			<-m.stopCh
+			cancel()
+		}()
+
+		m.errCh <- m.mgr.Start(ctx)
 	}()
 }
 
 // Stop stops the manager and waits for it to stop.
 func (m *managerUtilImpl) Stop() {
-	m.cancel()
+	m.stopOnce.Do(func() {
+		close(m.stopCh)
+	})
 	<-m.errCh
 }
 
