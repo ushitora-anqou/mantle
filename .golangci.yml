@@ -23,7 +23,6 @@ linters:
     - depguard
     - err113
     - exhaustruct
-    - forcetypeassert
     - funcorder
     - funlen
     - gochecknoglobals

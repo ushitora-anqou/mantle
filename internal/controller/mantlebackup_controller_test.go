@@ -363,7 +363,9 @@ var _ = Describe("MantleBackup controller", func() {
 				}
 				v, ok := lastExpireQueuedBackups.Load(types.NamespacedName{Namespace: backup.Namespace, Name: backup.Name})
 				Expect(ok).To(BeTrue())
-				createdAt := v.(*mantlev1.MantleBackup).Status.CreatedAt.Time
+				mb, ok := v.(*mantlev1.MantleBackup)
+				Expect(ok).To(BeTrue())
+				createdAt := mb.Status.CreatedAt.Time
 				Expect(createdAt).To(BeTemporally("==", expectCreatedAt))
 			},
 			Entry("an already expired backup should be deleted immediately", -time.Hour),
@@ -479,7 +481,10 @@ var _ = Describe("MantleBackup controller", func() {
 			grpcClient.EXPECT().CreateOrUpdatePVC(gomock.Any(), &customMatcherHelper{
 				// check if the PVC has the capacity equal to the fake RBD snapshot size
 				matcher: func(x any) bool {
-					req := x.(*proto.CreateOrUpdatePVCRequest)
+					req, ok := x.(*proto.CreateOrUpdatePVCRequest)
+					if !ok {
+						return false
+					}
 					pvc := &corev1.PersistentVolumeClaim{}
 					err := json.Unmarshal(req.GetPvc(), pvc)
 					if err != nil {

@@ -181,7 +181,10 @@ func (r *MantleBackupConfigReconciler) SetupWithManager(mgr ctrl.Manager) error 
 		&mantlev1.MantleBackupConfig{},
 		".metadata.uid",
 		func(rawObj client.Object) []string {
-			mbc := rawObj.(*mantlev1.MantleBackupConfig)
+			mbc, ok := rawObj.(*mantlev1.MantleBackupConfig)
+			if !ok {
+				return nil
+			}
 			if mbc.UID == "" {
 				return nil
 			}

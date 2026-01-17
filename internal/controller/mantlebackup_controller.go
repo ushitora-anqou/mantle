@@ -539,7 +539,10 @@ func (r *MantleBackupReconciler) reconcileAsSecondary(ctx context.Context, backu
 }
 
 func scheduleExpire(_ context.Context, evt event.TypedGenericEvent[client.Object], q workqueue.TypedRateLimitingInterface[ctrl.Request]) {
-	backup := evt.Object.(*mantlev1.MantleBackup)
+	backup, ok := evt.Object.(*mantlev1.MantleBackup)
+	if !ok {
+		return
+	}
 	// the parse never fails because expire method checked it.
 	expire, _ := strfmt.ParseDuration(backup.Spec.Expire)
 	q.AddAfter(
