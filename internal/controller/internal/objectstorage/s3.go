@@ -66,10 +66,11 @@ func NewS3Bucket(ctx context.Context, bucketName, endpoint, accessKeyID, secretA
 
 // Exists checks if an object exists in the bucket.
 func (b *S3Bucket) Exists(ctx context.Context, key string) (bool, error) {
-	if _, err := b.s3Client.HeadObject(ctx, &s3.HeadObjectInput{
+	_, err := b.s3Client.HeadObject(ctx, &s3.HeadObjectInput{
 		Bucket: &b.bucketName,
 		Key:    &key,
-	}); err != nil {
+	})
+	if err != nil {
 		var notFound *types.NotFound
 		if errors.As(err, &notFound) {
 			return false, nil
@@ -83,10 +84,11 @@ func (b *S3Bucket) Exists(ctx context.Context, key string) (bool, error) {
 
 // Delete deletes an object from the bucket.
 func (b *S3Bucket) Delete(ctx context.Context, key string) error {
-	if _, err := b.s3Client.DeleteObject(ctx, &s3.DeleteObjectInput{
+	_, err := b.s3Client.DeleteObject(ctx, &s3.DeleteObjectInput{
 		Bucket: &b.bucketName,
 		Key:    &key,
-	}); err != nil {
+	})
+	if err != nil {
 		var notFound *types.NotFound
 		if errors.As(err, &notFound) {
 			return nil

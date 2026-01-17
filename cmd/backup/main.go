@@ -92,11 +92,13 @@ func subMain(ctx context.Context) error {
 
 	// Get the target mbc.
 	var mbc mantlev1.MantleBackupConfig
-	if err := cli.Get(ctx, types.NamespacedName{Name: mbcName, Namespace: mbcNamespace}, &mbc); err != nil {
+	err = cli.Get(ctx, types.NamespacedName{Name: mbcName, Namespace: mbcNamespace}, &mbc)
+	if err != nil {
 		return fmt.Errorf("couldn't get mbc: %s: %s: %w", mbcName, mbcNamespace, err)
 	}
 
-	if err := createMantleBackup(ctx, cli, &mbc); err != nil {
+	err = createMantleBackup(ctx, cli, &mbc)
+	if err != nil {
 		return fmt.Errorf("backup failed: %s: %s: %w", mbcName, mbcNamespace, err)
 	}
 
@@ -137,7 +139,8 @@ func createMantleBackup(ctx context.Context, cli client.Client, mbc *mantlev1.Ma
 	}
 
 	var mb mantlev1.MantleBackup
-	if err := cli.Get(ctx, types.NamespacedName{Name: mbName, Namespace: mbNamespace}, &mb); err != nil {
+	err = cli.Get(ctx, types.NamespacedName{Name: mbName, Namespace: mbNamespace}, &mb)
+	if err != nil {
 		return fmt.Errorf("couldn't get MantleBackup: %s: %s: %w", mbName, mbNamespace, err)
 	}
 	uid, ok := mb.GetLabels()[MantleBackupConfigUID]

@@ -233,7 +233,7 @@ func checkCommandlineArgs() error {
 	return nil
 }
 
-func setupReconcilers(ctx context.Context, mgr manager.Manager, primarySettings *controller.PrimarySettings) error {
+func setupReconcilers(mgr manager.Manager, primarySettings *controller.PrimarySettings) error {
 	managedCephClusterID := os.Getenv("POD_NAMESPACE")
 	if managedCephClusterID == "" {
 		setupLog.Error(errors.New("POD_NAMESPACE is empty"), "POD_NAMESPACE is empty")
@@ -294,7 +294,8 @@ func setupReconcilers(ctx context.Context, mgr manager.Manager, primarySettings 
 		},
 		parsedBackupTransferPartSize,
 	)
-	if err := backupReconciler.SetupWithManager(mgr); err != nil {
+	err = backupReconciler.SetupWithManager(mgr)
+	if err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "MantleBackup")
 
 		return err
@@ -347,8 +348,8 @@ func setupReconcilers(ctx context.Context, mgr manager.Manager, primarySettings 
 	return nil
 }
 
-func setupStandalone(ctx context.Context, mgr manager.Manager) error {
-	return setupReconcilers(ctx, mgr, nil)
+func setupStandalone(mgr manager.Manager) error {
+	return setupReconcilers(mgr, nil)
 }
 
 func setupPrimary(ctx context.Context, mgr manager.Manager, wg *sync.WaitGroup) error {
@@ -418,7 +419,7 @@ func setupPrimary(ctx context.Context, mgr manager.Manager, wg *sync.WaitGroup) 
 		ExportDataStorageClass: exportDataStorageClass,
 	}
 
-	return setupReconcilers(ctx, mgr, primarySettings)
+	return setupReconcilers(mgr, primarySettings)
 }
 
 func setupSecondary(ctx context.Context, mgr manager.Manager, wg *sync.WaitGroup, cancel context.CancelFunc) error {
@@ -476,7 +477,7 @@ func setupSecondary(ctx context.Context, mgr manager.Manager, wg *sync.WaitGroup
 		serv.GracefulStop()
 	}()
 
-	return setupReconcilers(ctx, mgr, nil)
+	return setupReconcilers(mgr, nil)
 }
 
 func subMain() error {
@@ -524,7 +525,7 @@ func subMain() error {
 			return err
 		}
 
-		if err := setupStandalone(ctx, mgr); err != nil {
+		if err := setupStandalone(mgr); err != nil {
 			return err
 		}
 	case controller.RolePrimary:

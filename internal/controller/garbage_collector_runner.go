@@ -45,7 +45,8 @@ func (r *GarbageCollectorRunner) Start(ctx context.Context) error {
 			break
 		}
 
-		if err := r.deleteOrphanedPVs(ctx); err != nil {
+		err := r.deleteOrphanedPVs(ctx)
+		if err != nil {
 			logger.Error(err, "failed to delete orphaned PVs", "error", err)
 		}
 	}
@@ -63,9 +64,10 @@ func (r *GarbageCollectorRunner) deleteOrphanedPVs(ctx context.Context) error {
 	selector := labels.ValidatedSetSelector{}.Add(*requirement)
 
 	var pvList corev1.PersistentVolumeList
-	if err := r.client.List(ctx, &pvList, &client.ListOptions{
+	err = r.client.List(ctx, &pvList, &client.ListOptions{
 		LabelSelector: selector,
-	}); err != nil {
+	})
+	if err != nil {
 		return fmt.Errorf("failed to list PVs: %w", err)
 	}
 
@@ -77,9 +79,10 @@ func (r *GarbageCollectorRunner) deleteOrphanedPVs(ctx context.Context) error {
 		if !shouldDelete {
 			continue
 		}
-		if err := r.client.Delete(ctx, &pv, &client.DeleteOptions{
+		err = r.client.Delete(ctx, &pv, &client.DeleteOptions{
 			Preconditions: &metav1.Preconditions{UID: &pv.UID, ResourceVersion: &pv.ResourceVersion},
-		}); err != nil {
+		})
+		if err != nil {
 			return fmt.Errorf("failed to delete PV: %w", err)
 		}
 		logger.Info("an orphaned PV is removed", "name", pv.GetName())

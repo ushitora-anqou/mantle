@@ -128,14 +128,16 @@ func subMain() error {
 		return err
 	}
 
-	if err := webhookv1.SetupVolumeAttachmentWebhookWithManager(mgr); err != nil {
+	err = webhookv1.SetupVolumeAttachmentWebhookWithManager(mgr)
+	if err != nil {
 		setupLog.Error(err, "failed to setup VolumeAttachment webhook")
 
 		return err
 	}
 
 	setupLog.Info("Adding webhook certificate watcher to manager")
-	if err := mgr.Add(webhookCertWatcher); err != nil {
+	err = mgr.Add(webhookCertWatcher)
+	if err != nil {
 		setupLog.Error(err, "unable to add webhook certificate watcher to manager")
 
 		return err
